@@ -9,6 +9,14 @@ import { createClient } from "@/lib/supabase/server";
 
 export type FormState = { ok?: boolean; error?: string; message?: string };
 
+const MISSING_KEY =
+  "A chave de serviço do Supabase não está configurada neste servidor (SUPABASE_SERVICE_ROLE_KEY). " +
+  "Cadastre o funcionário em Supabase → Authentication → Users e ative-o aqui, ou configure a chave na Vercel.";
+
+function adminClientOrNull() {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY ? createAdminClient() : null;
+}
+
 const password = z
   .string()
   .min(8, "A senha deve ter pelo menos 8 caracteres.")
@@ -34,7 +42,8 @@ export async function createMember(_prev: FormState, formData: FormData): Promis
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { error: MISSING_KEY };
   const { error } = await admin.auth.admin.createUser({
     email: parsed.data.email,
     password: parsed.data.password,
@@ -68,9 +77,9 @@ export async function updateMember(
   if (error) return { error: friendlyError(error) };
 
   if (changes.active !== undefined) {
-    // Bloqueia/desbloqueia o login no Supabase Auth e encerra sessões ativas.
-    const admin = createAdminClient();
-    await admin.auth.admin.updateUserById(userId, { ban_duration: changes.active ? "none" : "876000h" });
+    // Bloqueia/desbloqueia o login no Supabase Auth (sem a chave, o RLS já bloqueia o acesso aos dados).
+    const admin = adminClientOrNull();
+    if (admin) await admin.auth.admin.updateUserById(userId, { ban_duration: changes.active ? "none" : "876000h" });
   }
 
   revalidatePath("/equipe");
@@ -84,7 +93,8 @@ export async function resetMemberPassword(_prev: FormState, formData: FormData):
   if (!idSchema.safeParse(userId).success) return { error: "Usuário inválido." };
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { error: MISSING_KEY };
   const { error } = await admin.auth.admin.updateUserById(userId, { password: parsed.data });
   if (error) return { error: "Não foi possível redefinir a senha." };
   return { ok: true, message: "Senha redefinida. Informe a nova senha ao funcionário." };

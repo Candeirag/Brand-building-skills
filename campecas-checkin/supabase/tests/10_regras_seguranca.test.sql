@@ -51,6 +51,14 @@ select tests.ok((select role from public.profiles where id = '00000000-0000-0000
 select tests.ok((select role from public.profiles where id = '00000000-0000-0000-0000-00000000000c') = 'mechanic',
   'papel lido do app_metadata');
 
+-- Conta criada pela API pública (sem papel em app_metadata) nasce desativada
+insert into auth.users (id, email, raw_user_meta_data, raw_app_meta_data) values
+  ('00000000-0000-0000-0000-00000000000e', 'estranho@exemplo.com', '{"full_name":"Pessoa Externa"}', '{"provider":"email"}');
+select tests.ok((select not active from public.profiles where id = '00000000-0000-0000-0000-00000000000e'),
+  'cadastro sem papel definido pelo administrador nasce desativado');
+select tests.ok((select active from public.profiles where id = '00000000-0000-0000-0000-00000000000b'),
+  'funcionário criado pela tela Equipe nasce ativo');
+
 -- Anônimo ---------------------------------------------------------------------
 set role anon;
 select tests.throws('select * from public.inspections', 'permission denied', 'anon não lê inspeções');
