@@ -10,7 +10,7 @@ export default function PrivacyPage() {
       <header className="border-b border-border px-5 py-4 sm:px-6">
         <div className="mx-auto max-w-3xl">
           <Link href="/" aria-label="Início">
-            <Logo size="sm" subtitle="Oficina · Check-in" />
+            <Logo height={26} subtitle="Check-in · inspeção de entrada" />
           </Link>
         </div>
       </header>

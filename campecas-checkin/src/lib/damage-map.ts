@@ -111,7 +111,7 @@ export function zoneState(
 
 /** Cores dos estados (mesmo objeto para as marcas e para a legenda). */
 export const ZONE_STYLE: Record<ZoneState, { fill: string; stroke: string; label: string; dashed?: boolean }> = {
-  damaged: { fill: "#e10600", stroke: "#8c1410", label: "Avariado" },
+  damaged: { fill: "#BF1A2C", stroke: "#8E1424", label: "Avariado" },
   ok: { fill: "#e4dede", stroke: "#c9c2c2", label: "Normal" },
   not_checked: { fill: "#ffffff", stroke: "#6b6b6b", label: "Não verificado", dashed: true },
   not_applicable: { fill: "#f6f2f2", stroke: "#e4dede", label: "Não se aplica" },

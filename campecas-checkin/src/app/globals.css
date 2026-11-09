@@ -2,6 +2,7 @@
 
 /*
  * CAMPEÇAS CHECK-IN: estilo "accent ladder" (direção de arte, seed 1386293280)
+ * Cores da logo original: vermelho #BF1A2C e grafite #231F20.
  * Um matiz só, o vermelho Campeças: cheio apenas em marcas pequenas (avarias, ícone ativo,
  * o único botão principal); os tons claros dele fazem o trabalho de área.
  * Chrome claro, superfícies chapadas: borda de 1 px OU degrau de tom, nunca sombra em repouso.
@@ -17,13 +18,14 @@
   --color-ground: #fbf8f8;
   --color-surface: #ffffff;
   --color-raised: #f6f2f2;
-  --color-active: #fdeceb;
+  --color-active: #fbebed;
 
   /* Escada do matiz */
-  --color-tint: #fdeceb;
-  --color-tint-2: #f9d6d3;
-  --color-accent: #e10600;
-  --color-accent-ink: #8c1410;
+  --color-tint: #fbebed;
+  --color-tint-2: #f3cdd2;
+  --color-accent: #bf1a2c;
+  --color-accent-ink: #8e1424;
+  --color-accent-on-dark: #ea5562; /* mesmo matiz, legível sobre o grafite #231F20 */
 
   /* Linhas em três degraus */
   --color-border: #ebe6e6;
@@ -32,10 +34,10 @@
   --color-dash: #e2dcdc;
 
   /* Texto em três níveis (todos >= 4,5:1 sobre o fundo) */
-  --color-ink: #111111;
+  --color-ink: #231f20;
   --color-muted: #5f6368;
   --color-faint: #6b6b6b;
-  --color-primary: #1d1f20;
+  --color-primary: #231f20;
 
   /* Status */
   --color-positive: #247b50;
@@ -49,7 +51,6 @@
   --color-plate-band: #1f4fa3;
 
   --font-sans: var(--font-barlow), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-brand: var(--font-barlow-brand), var(--font-barlow), ui-sans-serif, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace; /* taste-skill-ignore: só em .id-type */
 
   --radius-card: 8px;

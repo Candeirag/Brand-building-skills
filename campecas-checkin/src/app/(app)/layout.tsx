@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-dvh lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="no-print sticky top-0 hidden h-dvh flex-col border-r border-border px-3 pt-5 pb-3 lg:flex">
         <Link href="/" className="mb-6 px-1.5" aria-label="Ir para o painel">
-          <Logo size="sm" subtitle="Oficina · Check-in" />
+          <Logo height={26} subtitle="Check-in · inspeção de entrada" />
         </Link>
         <SidebarNav isAdmin={isAdmin} openCount={openCount} />
         <UserMenu name={profile.full_name} roleLabel={roleLabel} />
@@ -35,7 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <header className="no-print sticky top-0 z-30 border-b border-border bg-ground pt-[env(safe-area-inset-top)] lg:hidden">
         <div className="flex h-12 items-center gap-3 pr-1 pl-4">
           <Link href="/" aria-label="Ir para o painel">
-            <LogoMark className="h-7 w-7" />
+            <LogoMark height={22} />
           </Link>
           <div className="min-w-0 flex-1">
             <ScreenName />

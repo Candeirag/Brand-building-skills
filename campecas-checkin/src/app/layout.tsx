@@ -8,14 +8,6 @@ const barlow = Barlow({
   variable: "--font-barlow",
   display: "swap",
 });
-// Logotipo: a mesma família em 700 itálico (uma família só; a mono fica para placas e IDs).
-const barlowBrand = Barlow({
-  subsets: ["latin"],
-  weight: "700",
-  style: "italic",
-  variable: "--font-barlow-brand",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: { default: "CAMPEÇAS CHECK-IN", template: "%s · CAMPEÇAS CHECK-IN" },
@@ -35,7 +27,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${barlow.variable} ${barlowBrand.variable}`}>
+    <html lang="pt-BR" className={barlow.variable}>
       <body className="min-h-dvh">{children}</body>
     </html>
   );

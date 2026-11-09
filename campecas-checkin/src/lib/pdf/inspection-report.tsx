@@ -1,4 +1,5 @@
 import { Document, Image, Page, Path, Rect, StyleSheet, Svg, Text, View } from "@react-pdf/renderer";
+import { BRAND_DARK, BRAND_RED, LOGO_VIEWBOX, MARK_PATHS, WORD_PATHS } from "@/lib/brand";
 import { CHECKLIST_STATUS, fuelLabel, groupItems } from "@/lib/checklist";
 import { formatDateTime, formatKm, formatPhone, formatPlate, maskDocument } from "@/lib/format";
 import { BODY_PATH, MAP_VIEWBOX, MAP_ZONES, ROOF_RECT, ZONE_STYLE, zoneState } from "@/lib/damage-map";
@@ -6,23 +7,21 @@ import { PHOTO_CATEGORIES } from "@/lib/photos";
 import type { Tables } from "@/lib/supabase/database.types";
 
 const C = {
-  red: "#e10600",
-  ink: "#0b0b0c",
+  red: BRAND_RED,
+  ink: BRAND_DARK,
   graphite: "#2b2d31",
   steel: "#6b7078",
   line: "#e3e4e7",
   paper: "#f3f4f6",
   ok: "#15803d",
   okSoft: "#e8f6ed",
-  redSoft: "#fdeceb",
+  redSoft: "#fbebed",
 };
 
 const s = StyleSheet.create({
   page: { paddingTop: 0, paddingBottom: 48, paddingHorizontal: 0, fontFamily: "Helvetica", fontSize: 9, color: C.ink },
   header: { backgroundColor: C.ink, paddingHorizontal: 32, paddingTop: 22, paddingBottom: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  brandRow: { flexDirection: "row", alignItems: "center" },
-  brand: { color: "#fff", fontFamily: "Helvetica-BoldOblique", fontSize: 22, letterSpacing: 1 },
-  brandSub: { color: "#9a9ca1", fontSize: 7.5, letterSpacing: 3, marginTop: 2 },
+  brandSub: { color: "#a7a3a4", fontSize: 7, letterSpacing: 2.5, marginTop: 5 },
   headerRight: { alignItems: "flex-end" },
   docTitle: { color: "#c9cacd", fontSize: 8, letterSpacing: 1.5 },
   number: { color: "#fff", fontFamily: "Helvetica-Bold", fontSize: 16, marginTop: 3 },
@@ -90,12 +89,18 @@ function Field({ label, value, wide }: { label: string; value: string | number |
   );
 }
 
-function LogoMark() {
+/** Logo original da CAMPEÇAS (palavra em branco sobre o grafite da marca, como no arquivo da oficina). */
+function BrandLogo() {
+  const h = 34;
+  const w = (h * LOGO_VIEWBOX[2]) / LOGO_VIEWBOX[3];
   return (
-    <Svg width={34} height={34} viewBox="0 0 64 64" style={{ marginRight: 10 }}>
-      <Rect width="64" height="64" rx="14" fill={C.red} />
-      <Path d="M14 40 L26 18 H50 L44 28 H32 L28 36 H40 L34 46 H14 Z" fill="#ffffff" />
-      <Path d="M38 46 L52 22" stroke={C.ink} strokeWidth={5} strokeLinecap="round" />
+    <Svg width={w} height={h} viewBox={LOGO_VIEWBOX.join(" ")}>
+      {MARK_PATHS.map((d, i) => (
+        <Path key={`m${i}`} d={d} fill={BRAND_RED} />
+      ))}
+      {WORD_PATHS.map((d, i) => (
+        <Path key={`w${i}`} d={d} fill="#ffffff" />
+      ))}
     </Svg>
   );
 }
@@ -172,12 +177,9 @@ export function InspectionReport({ inspection: i, items, photos, generatedAt }: 
     >
       <Page size="A4" style={s.page}>
         <View style={s.header} fixed>
-          <View style={s.brandRow}>
-            <LogoMark />
-            <View>
-              <Text style={s.brand}>CAMPEÇAS</Text>
-              <Text style={s.brandSub}>CHECK-IN · INSPEÇÃO DE ENTRADA</Text>
-            </View>
+          <View>
+            <BrandLogo />
+            <Text style={s.brandSub}>CHECK-IN · INSPEÇÃO DE ENTRADA</Text>
           </View>
           <View style={s.headerRight}>
             <Text style={s.docTitle}>RELATÓRIO DE INSPEÇÃO</Text>

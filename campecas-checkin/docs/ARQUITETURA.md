@@ -102,9 +102,12 @@ Caminho no Storage: `{inspection_id}/{categoria}/{uuid}.jpg`.
 A interface segue a skill de direção de arte para telas de app (`references/app-screens.md`), estilo
 **accent ladder** (seed `1386293280`):
 
-- **Um matiz só, o vermelho Campeças (`#e10600`)**, cheio apenas em marcas pequenas: as avarias, o ícone da
+- **Logo original da oficina** (vetores do arquivo CorelDRAW, sem "Lanternagem e pintura" e sem telefones) em
+  `src/lib/brand.ts`: versão para fundo claro (palavra no grafite) e para fundo escuro (palavra em branco), e o
+  símbolo do pistão sozinho no ícone do app e na barra do celular.
+- **Um matiz só, o vermelho da logo (`#BF1A2C`)**, cheio apenas em marcas pequenas: as avarias, o ícone da
   navegação ativa e o único botão preenchido de cada tela. Os tons claros dele fazem o trabalho de área
-  (item ativo, avisos de avaria). O fundo (`#fbf8f8`) fica um degrau tingido em direção ao vermelho.
+  (item ativo, avisos de avaria). O fundo (`#fbf8f8`) fica um degrau tingido em direção ao vermelho, e o texto usa o grafite da logo (`#231F20`).
 - **Vermelho significa avaria.** Em todo lugar (tabelas, mapa, KPIs, PDF) a cor cheia aponta um dano ou uma
   pendência; o que está normal fica em cinza.
 - **Elemento-assinatura: o mapa de avarias** (`src/lib/damage-map.ts`), o croqui da ficha de entrada em papel,
@@ -112,7 +115,8 @@ A interface segue a skill de direção de arte para telas de app (`references/ap
 - **Estrutura "plano aberto"**: barra lateral clara de 240 px no desktop; no celular, barra superior de 48 px com o
   nome da tela e barra inferior com os destinos (o editor usa a tela inteira).
 - **Superfícies chapadas**: borda de 1 px ou degrau de tom, sem sombra em repouso; raio 8/6/4; uma família
-  tipográfica (Barlow), com mono só para identificadores (placa, nº da inspeção).
+  tipográfica (Barlow) na interface, com mono só para identificadores (placa, nº da inspeção); a palavra CAMPEÇAS
+  é sempre o vetor da logo, nunca texto digitado.
 - **Cada tela responde a uma pergunta**, escrita como comentário no topo do arquivo da página (ex.: painel:
   "Quais carros do pátio estão com inspeção aberta, e o que entrou hoje?").
 
