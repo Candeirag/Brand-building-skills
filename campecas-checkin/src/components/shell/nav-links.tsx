@@ -33,6 +33,7 @@ export function screenName(pathname: string): string {
   if (pathname.startsWith("/historico")) return "Histórico";
   if (pathname.startsWith("/veiculos")) return "Veículo";
   if (pathname.startsWith("/equipe")) return "Equipe e acessos";
+  if (pathname.startsWith("/conta")) return "Minha conta";
   return "Campeças";
 }
 

@@ -370,6 +370,16 @@ export type Database = {
         Returns: { id: string; number: string; finalized_at: string }[];
       };
       anonymize_customer: { Args: { p_customer_id: string }; Returns: undefined };
+      admin_create_member: {
+        Args: {
+          p_email: string;
+          p_password: string;
+          p_full_name: string;
+          p_role: Database["public"]["Enums"]["user_role"];
+        };
+        Returns: string;
+      };
+      admin_set_member_password: { Args: { p_user_id: string; p_password: string }; Returns: undefined };
     };
     Enums: {
       user_role: "admin" | "inspector" | "mechanic";

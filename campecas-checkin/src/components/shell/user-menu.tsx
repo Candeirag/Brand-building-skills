@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronsUpDown, LogOut, ShieldCheck } from "lucide-react";
+import { ChevronsUpDown, KeyRound, LogOut, ShieldCheck } from "lucide-react";
 
 // Sombra só no que flutua (menu aberto sobre o conteúdo).
 const MENU_SHADOW = "shadow-[0_8px_24px_rgba(0,0,0,0.12)]"; // taste-skill-ignore: sobreposição real
@@ -83,6 +83,14 @@ export function UserMenu({ name, roleLabel, compact = false }: { name: string; r
               <p className="text-xs text-muted">{roleLabel}</p>
             </div>
           )}
+          <Link
+            href="/conta"
+            role="menuitem"
+            className="flex h-10 items-center gap-2.5 rounded-control px-3 text-sm hover:bg-raised"
+            onClick={() => setOpen(false)}
+          >
+            <KeyRound size={16} className="text-muted" /> Alterar minha senha
+          </Link>
           <Link
             href="/privacidade"
             role="menuitem"

@@ -204,6 +204,49 @@ select tests.throws($$update public.profiles set active = false where id = '0000
 select tests.ok((select count(*) from public.audit_log where action = 'inspection.finalized') = 1,
   'administrador consulta auditoria da finalização');
 
+-- Gestão da equipe pelo banco (sem chave de serviço)
+select tests.ok(public.admin_create_member('Novo.Mecanico@Campecas.com.br', 'Oficina2026', 'Pedro Novo', 'mechanic') is not null,
+  'administrador cadastra funcionário pelo banco');
+select tests.ok((select active and role = 'mechanic' from public.profiles where email = 'novo.mecanico@campecas.com.br'),
+  'funcionário cadastrado nasce ativo com a função escolhida');
+reset role;
+select tests.ok(exists(select 1 from auth.identities i join auth.users u on u.id = i.user_id
+  where u.email = 'novo.mecanico@campecas.com.br' and i.provider = 'email'), 'identidade de login por e-mail criada');
+set role authenticated;
+select tests.throws($$select public.admin_create_member('novo.mecanico@campecas.com.br', 'Oficina2026', 'Outro', 'inspector')$$,
+  'Já existe', 'e-mail duplicado é recusado');
+select tests.throws($$select public.admin_create_member('x@campecas.com.br', 'fraca', 'Senha Fraca', 'inspector')$$,
+  'A senha deve', 'senha fraca é recusada');
+reset role;
+select tests.ok((select encrypted_password from auth.users where email = 'novo.mecanico@campecas.com.br')
+  = extensions.crypt('Oficina2026', (select encrypted_password from auth.users where email = 'novo.mecanico@campecas.com.br')),
+  'senha gravada com hash bcrypt');
+set role authenticated;
+select public.admin_set_member_password((select id from public.profiles where email = 'novo.mecanico@campecas.com.br'), 'NovaSenha2026');
+reset role;
+select tests.ok((select encrypted_password from auth.users where email = 'novo.mecanico@campecas.com.br')
+  = extensions.crypt('NovaSenha2026', (select encrypted_password from auth.users where email = 'novo.mecanico@campecas.com.br')),
+  'administrador redefine a senha');
+set role authenticated;
+update public.profiles set active = false where email = 'novo.mecanico@campecas.com.br';
+reset role;
+select tests.ok((select banned_until = 'infinity' from auth.users where email = 'novo.mecanico@campecas.com.br'),
+  'desativar bloqueia o login no Auth');
+set role authenticated;
+update public.profiles set active = true where email = 'novo.mecanico@campecas.com.br';
+reset role;
+select tests.ok((select banned_until is null from auth.users where email = 'novo.mecanico@campecas.com.br'),
+  'reativar desbloqueia o login');
+set role authenticated;
+select tests.as_user('00000000-0000-0000-0000-00000000000b');
+select tests.throws($$select public.admin_create_member('y@campecas.com.br', 'Oficina2026', 'Intruso', 'admin')$$,
+  'Somente administradores', 'funcionário comum não cadastra contas');
+select tests.throws($$select public.admin_set_member_password('00000000-0000-0000-0000-00000000000a', 'Oficina2026')$$,
+  'Somente administradores', 'funcionário comum não redefine senhas');
+select tests.throws($$select public.internal_create_auth_user('z@campecas.com.br', 'Oficina2026', 'Z Z', 'admin')$$,
+  'permission denied', 'função interna de criação não é exposta');
+select tests.as_user('00000000-0000-0000-0000-00000000000a');
+
 -- LGPD
 select public.anonymize_customer((select id from public.customers where document = '52998224725'));
 select tests.ok((select owner_name from public.inspections where id = '11111111-1111-1111-1111-111111111111')

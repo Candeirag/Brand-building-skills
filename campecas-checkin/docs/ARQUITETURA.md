@@ -84,7 +84,7 @@ Caminho no Storage: `{inspection_id}/{categoria}/{uuid}.jpg`.
 | Autorização | `is_staff()` (ativo) e `is_admin()` usados em todas as políticas RLS. Papel anônimo sem nenhum privilégio. Funcionário desativado é bloqueado no Auth (ban) e perde acesso imediatamente via RLS. |
 | Integridade | Gatilhos impedem forjar status/número/autor; finalizadas não podem ser alteradas ou excluídas (nem pelo dono do banco); só o autor ou admin exclui rascunhos; sempre resta 1 admin ativo. |
 | Fotos | Bucket privado, limite de 10 MiB, apenas JPEG/PNG/WebP; envio e remoção só em rascunhos; sem sobrescrita; leitura por URL assinada de 2 h. |
-| Aplicação | CSP, HSTS, `X-Frame-Options: DENY`, `nosniff`, `Permissions-Policy` (câmera só no próprio site); validação com zod nas Server Actions; proteção contra redirecionamento aberto no login; busca sanitizada para filtros do PostgREST; chave de serviço apenas no servidor e apenas na tela Equipe. |
+| Aplicação | CSP, HSTS, `X-Frame-Options: DENY`, `nosniff`, `Permissions-Policy` (câmera só no próprio site); validação com zod nas Server Actions; proteção contra redirecionamento aberto no login; busca sanitizada para filtros do PostgREST; nenhuma chave secreta no servidor: a gestão da equipe usa funções do banco restritas a administradores (`admin_create_member`, `admin_set_member_password`), e desativar um perfil bloqueia o login no Auth por gatilho. |
 
 ## LGPD
 

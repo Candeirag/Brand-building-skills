@@ -4,18 +4,15 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { friendlyError } from "@/lib/errors";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+/*
+ * Gestão da equipe pelas funções do banco (admin_create_member, admin_set_member_password).
+ * Elas verificam is_admin() por dentro, então não há chave de serviço no servidor.
+ * Desativar um perfil bloqueia o login no Auth por gatilho (profiles_sync_ban).
+ */
+
 export type FormState = { ok?: boolean; error?: string; message?: string };
-
-const MISSING_KEY =
-  "A chave de serviço do Supabase não está configurada neste servidor (SUPABASE_SERVICE_ROLE_KEY). " +
-  "Cadastre o funcionário em Supabase → Authentication → Users e ative-o aqui, ou configure a chave na Vercel.";
-
-function adminClientOrNull() {
-  return process.env.SUPABASE_SERVICE_ROLE_KEY ? createAdminClient() : null;
-}
 
 const password = z
   .string()
@@ -42,19 +39,14 @@ export async function createMember(_prev: FormState, formData: FormData): Promis
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
 
-  const admin = adminClientOrNull();
-  if (!admin) return { error: MISSING_KEY };
-  const { error } = await admin.auth.admin.createUser({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    email_confirm: true,
-    user_metadata: { full_name: parsed.data.full_name },
-    app_metadata: { role: parsed.data.role },
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_create_member", {
+    p_email: parsed.data.email,
+    p_password: parsed.data.password,
+    p_full_name: parsed.data.full_name,
+    p_role: parsed.data.role,
   });
-  if (error) {
-    const exists = /already|registered|exists/i.test(error.message);
-    return { error: exists ? "Já existe um usuário com este e-mail." : "Não foi possível criar o usuário." };
-  }
+  if (error) return { error: friendlyError(error, "Não foi possível cadastrar o funcionário.") };
 
   revalidatePath("/equipe");
   return { ok: true, message: `${parsed.data.full_name} foi cadastrado(a). Informe a senha provisória pessoalmente.` };
@@ -76,12 +68,6 @@ export async function updateMember(
   const { error } = await supabase.from("profiles").update(changes).eq("id", userId);
   if (error) return { error: friendlyError(error) };
 
-  if (changes.active !== undefined) {
-    // Bloqueia/desbloqueia o login no Supabase Auth (sem a chave, o RLS já bloqueia o acesso aos dados).
-    const admin = adminClientOrNull();
-    if (admin) await admin.auth.admin.updateUserById(userId, { ban_duration: changes.active ? "none" : "876000h" });
-  }
-
   revalidatePath("/equipe");
   return { ok: true };
 }
@@ -93,10 +79,9 @@ export async function resetMemberPassword(_prev: FormState, formData: FormData):
   if (!idSchema.safeParse(userId).success) return { error: "Usuário inválido." };
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
 
-  const admin = adminClientOrNull();
-  if (!admin) return { error: MISSING_KEY };
-  const { error } = await admin.auth.admin.updateUserById(userId, { password: parsed.data });
-  if (error) return { error: "Não foi possível redefinir a senha." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_set_member_password", { p_user_id: userId, p_password: parsed.data });
+  if (error) return { error: friendlyError(error, "Não foi possível redefinir a senha.") };
   return { ok: true, message: "Senha redefinida. Informe a nova senha ao funcionário." };
 }
 

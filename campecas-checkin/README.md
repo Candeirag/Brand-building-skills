@@ -32,7 +32,8 @@ A arquitetura, o modelo de dados, as medidas de segurança e LGPD e a direção 
 | **Histórico** | Busca por placa, proprietário ou número, filtro por período e situação, paginação, fotos ampliáveis, histórico por veículo |
 | **Mapa de avarias** | Silhueta do carro vista de cima com cada zona no estado do checklist: atualiza ao vivo no editor e aparece na inspeção finalizada e no PDF |
 | **Relatório PDF** | Identidade visual Campeças, veículo, proprietário (documento mascarado), km, data, checklist, mapa e descrição das avarias, fotos, responsáveis e campos de assinatura |
-| **Equipe (admin)** | Cadastrar funcionários, definir função, desativar/reativar acesso, redefinir senha, anonimizar dados de clientes (LGPD) |
+| **Equipe (admin)** | Cadastrar funcionários, definir função, desativar/reativar acesso (bloqueia o login na hora), redefinir senha, anonimizar dados de clientes (LGPD) |
+| **Minha conta** | Cada funcionário troca a própria senha (ex.: a provisória do primeiro acesso) |
 | **Celular** | Layout mobile-first, botões grandes, instalável na tela inicial (manifest PWA) |
 
 ## Implantação
@@ -56,13 +57,14 @@ A arquitetura, o modelo de dados, as medidas de segurança e LGPD e a direção 
 
 ### 2. Variáveis de ambiente
 
-Copie `.env.example` para `.env.local` e preencha com os dados de *Project Settings → API*:
+Copie `.env.example` para `.env.local` e preencha com os dados de *Project Settings → API*. Nenhuma chave secreta
+é necessária: a tela Equipe cria funcionários, redefine senhas e bloqueia o login de quem é desativado por funções
+do banco que só administradores executam.
 
 | Variável | Valor |
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave pública (*anon* ou *publishable*) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Chave secreta (*service_role* ou *secret*) — **somente no servidor**, usada apenas na tela Equipe |
 
 ### 3. Executar
 
