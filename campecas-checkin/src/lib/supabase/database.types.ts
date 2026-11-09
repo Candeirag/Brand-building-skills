@@ -16,6 +16,7 @@ export type Database = {
           email: string | null;
           role: Database["public"]["Enums"]["user_role"];
           active: boolean;
+          must_change_password: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -177,6 +178,8 @@ export type Database = {
           updated_at: string;
           finalized_at: string | null;
           finalized_by: string | null;
+          is_blank: boolean;
+          service_request: string | null;
         };
         Insert: {
           id?: string;
@@ -205,6 +208,8 @@ export type Database = {
           updated_at?: string;
           finalized_at?: string | null;
           finalized_by?: string | null;
+          is_blank?: boolean;
+          service_request?: string | null;
         };
         Update: {
           id?: string;
@@ -233,6 +238,8 @@ export type Database = {
           updated_at?: string;
           finalized_at?: string | null;
           finalized_by?: string | null;
+          is_blank?: boolean;
+          service_request?: string | null;
         };
         Relationships: [
           {
@@ -345,6 +352,51 @@ export type Database = {
           },
         ];
       };
+      report_links: {
+        Row: {
+          id: string;
+          inspection_id: string;
+          token: string;
+          created_by: string | null;
+          created_at: string;
+          expires_at: string;
+          revoked_at: string | null;
+          revoked_by: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "report_links_inspection_id_fkey";
+            columns: ["inspection_id"];
+            isOneToOne: false;
+            referencedRelation: "inspections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      report_deliveries: {
+        Row: {
+          id: string;
+          inspection_id: string;
+          link_id: string;
+          channel: string;
+          sent_by: string | null;
+          sent_by_name: string | null;
+          sent_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "report_deliveries_inspection_id_fkey";
+            columns: ["inspection_id"];
+            isOneToOne: false;
+            referencedRelation: "inspections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       audit_log: {
         Row: {
           id: number;
@@ -380,6 +432,13 @@ export type Database = {
         Returns: string;
       };
       admin_set_member_password: { Args: { p_user_id: string; p_password: string }; Returns: undefined };
+      get_or_create_report_link: {
+        Args: { p_inspection_id: string };
+        Returns: { token: string; expires_at: string }[];
+      };
+      revoke_report_link: { Args: { p_inspection_id: string }; Returns: number };
+      register_report_delivery: { Args: { p_inspection_id: string }; Returns: string };
+      public_report: { Args: { p_token: string; p_server_key: string }; Returns: Json };
     };
     Enums: {
       user_role: "admin" | "inspector" | "mechanic";

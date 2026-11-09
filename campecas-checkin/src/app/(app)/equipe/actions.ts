@@ -60,11 +60,28 @@ export async function updateMember(
 ): Promise<FormState> {
   const me = await requireAdmin();
   if (!idSchema.safeParse(userId).success) return { error: "Usuário inválido." };
-  if (userId === me.id && (changes.active === false || (changes.role && changes.role !== "admin"))) {
-    return { error: "Você não pode remover o seu próprio acesso de administrador." };
+  // Ninguém altera a própria função nem se desativa (o banco também bloqueia).
+  if (userId === me.id && (changes.role !== undefined || changes.active !== undefined)) {
+    return { error: "Você não pode alterar a sua própria função nem se desativar." };
   }
 
   const supabase = await createClient();
+  const { data: target } = await supabase.from("profiles").select("role, active").eq("id", userId).maybeSingle();
+  if (!target) return { error: "Funcionário não encontrado." };
+
+  // Nenhuma ação pode deixar o sistema sem administrador ativo (o banco também bloqueia).
+  const removesAdmin =
+    target.role === "admin" && target.active && ((changes.role !== undefined && changes.role !== "admin") || changes.active === false);
+  if (removesAdmin) {
+    const { count } = await supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin")
+      .eq("active", true)
+      .neq("id", userId);
+    if (!count) return { error: "É necessário manter pelo menos um administrador ativo." };
+  }
+
   const { error } = await supabase.from("profiles").update(changes).eq("id", userId);
   if (error) return { error: friendlyError(error) };
 

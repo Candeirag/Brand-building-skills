@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus } from "lucide-react";
-import { createInspection } from "../../inspecoes/actions";
+import { NewInspectionButton } from "@/components/inspection/new-inspection-button";
 import { InspectionRow, InspectionTableHeader } from "@/components/inspection/inspection-row";
-import { buttonClass } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Plate } from "@/components/ui/plate";
 import { requireStaff } from "@/lib/auth";
@@ -69,12 +67,9 @@ export default async function VehiclePage({ params }: { params: Promise<{ placa:
             </p>
           </div>
         </div>
-        <form action={createInspection} className="flex-none">
-          <input type="hidden" name="plate" value={plate} />
-          <button type="submit" className={buttonClass("primary", "lg", "w-full sm:h-10 sm:w-auto")}>
-            <Plus size={18} strokeWidth={2.25} /> Nova inspeção deste veículo
-          </button>
-        </form>
+        <div className="flex-none">
+          <NewInspectionButton plate={plate} label="Nova inspeção deste veículo" />
+        </div>
       </div>
 
       <section aria-label="Resumo do veículo" className="panel mt-6 grid grid-cols-1 sm:grid-cols-3">

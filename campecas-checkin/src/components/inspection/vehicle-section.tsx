@@ -2,6 +2,7 @@
 
 import { CalendarClock, History } from "lucide-react";
 import Link from "next/link";
+import { FUEL_LEVELS, type FuelLevel } from "@/lib/checklist";
 import { formatDateTime, formatKm, formatNumber } from "@/lib/format";
 import { fieldErrors, parseMileage, vehicleSectionComplete, type InspectionForm } from "@/lib/inspection-form";
 import { normalizePlate, onlyDigits } from "@/lib/validation";
@@ -31,12 +32,16 @@ export function VehicleSection({
   startedAt,
   lookup,
   lookingUp,
+  fuelLevel,
+  setFuelLevel,
 }: {
   form: InspectionForm;
   update: <K extends keyof InspectionForm>(field: K, value: InspectionForm[K]) => void;
-  startedAt: string;
+  startedAt: string | null;
   lookup: VehicleLookup | null;
   lookingUp: boolean;
+  fuelLevel: FuelLevel | null;
+  setFuelLevel: (v: FuelLevel) => void;
 }) {
   const errors = fieldErrors(form);
   const mileage = parseMileage(form.mileage);
@@ -148,6 +153,34 @@ export function VehicleSection({
         />
 
         <div className="sm:col-span-2">
+          <p className="field-label">Nível de combustível</p>
+          <div role="radiogroup" aria-label="Nível de combustível" className="grid grid-cols-5 gap-1.5">
+            {FUEL_LEVELS.map((f) => {
+              const selected = fuelLevel === f.value;
+              return (
+                <button
+                  key={f.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setFuelLevel(f.value)}
+                  className={`relative h-11 overflow-hidden rounded-control border text-sm sm:h-10 ${
+                    selected ? "border-ink font-medium text-ink" : "border-control bg-surface text-muted"
+                  }`}
+                >
+                  <span
+                    className={`absolute inset-y-0 left-0 ${selected ? "bg-control" : "bg-raised"}`}
+                    style={{ width: `${f.fraction * 100}%` }}
+                    aria-hidden="true"
+                  />
+                  <span className="relative">{f.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="sm:col-span-2">
           <TextField
             label="Cor"
             value={form.color}
@@ -168,7 +201,13 @@ export function VehicleSection({
         <div className="flex items-center gap-2.5 text-sm text-muted sm:col-span-2">
           <CalendarClock size={16} className="shrink-0" />
           <span>
-            Entrada registrada automaticamente em <span className="num text-ink">{formatDateTime(startedAt)}</span>
+            {startedAt ? (
+              <>
+                Entrada registrada automaticamente em <span className="num text-ink">{formatDateTime(startedAt)}</span>
+              </>
+            ) : (
+              "A data e a hora da entrada são registradas quando você preencher o primeiro campo."
+            )}
           </span>
         </div>
       </div>

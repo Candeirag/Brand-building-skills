@@ -1,82 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState } from "react";
 import { LoaderCircle } from "lucide-react";
 import { buttonClass } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
-
-function passwordProblem(p: string): string | null {
-  if (p.length < 8) return "A senha deve ter pelo menos 8 caracteres.";
-  if (p.length > 72) return "A senha deve ter no máximo 72 caracteres.";
-  if (!/[a-z]/.test(p)) return "A senha deve conter letra minúscula.";
-  if (!/[A-Z]/.test(p)) return "A senha deve conter letra maiúscula.";
-  if (!/\d/.test(p)) return "A senha deve conter número.";
-  return null;
-}
+import { changeOwnPassword, type PasswordState } from "@/app/(app)/conta/actions";
 
 export function ChangePasswordForm() {
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [pending, setPending] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setResult(null);
-    const problem = passwordProblem(password);
-    if (problem) return setResult({ ok: false, text: problem });
-    if (password !== confirm) return setResult({ ok: false, text: "As duas senhas não são iguais." });
-
-    setPending(true);
-    const { error } = await createClient().auth.updateUser({ password });
-    setPending(false);
-    if (error) {
-      const same = /different from the old|same/i.test(error.message);
-      return setResult({ ok: false, text: same ? "A nova senha precisa ser diferente da atual." : "Não foi possível alterar a senha. Tente de novo." });
-    }
-    setPassword("");
-    setConfirm("");
-    setResult({ ok: true, text: "Senha alterada. Use a nova senha no próximo acesso." });
-  }
+  const [state, action, pending] = useActionState<PasswordState, FormData>(changeOwnPassword, {});
 
   return (
-    <form onSubmit={submit} className="space-y-4" noValidate>
+    <form action={action} className="space-y-4" key={state.ok ? "ok" : "form"}>
+      <div>
+        <label htmlFor="current-password" className="field-label">
+          Senha atual
+        </label>
+        <input id="current-password" name="current_password" type="password" autoComplete="current-password" required className="field-input" />
+      </div>
       <div>
         <label htmlFor="new-password" className="field-label">
           Nova senha
         </label>
         <input
           id="new-password"
+          name="new_password"
           type="password"
           autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="field-input"
           required
+          minLength={8}
+          aria-describedby="new-password-hint"
+          className="field-input"
         />
+        <p id="new-password-hint" className="mt-1.5 text-xs text-muted">
+          Pelo menos 8 caracteres, com letra maiúscula, minúscula e número.
+        </p>
       </div>
       <div>
         <label htmlFor="confirm-password" className="field-label">
           Repita a nova senha
         </label>
-        <input
-          id="confirm-password"
-          type="password"
-          autoComplete="new-password"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          className="field-input"
-          required
-        />
+        <input id="confirm-password" name="confirm_password" type="password" autoComplete="new-password" required className="field-input" />
       </div>
-      {result && (
-        <p
-          role={result.ok ? "status" : "alert"}
-          className={`rounded-control border px-3 py-2 text-sm ${
-            result.ok ? "border-positive/25 bg-positive-bg text-positive-ink" : "border-tint-2 bg-tint text-accent-ink"
-          }`}
-        >
-          {result.text}
+      {state.error && (
+        <p role="alert" className="rounded-control border border-tint-2 bg-tint px-3 py-2 text-sm text-accent-ink">
+          {state.error}
+        </p>
+      )}
+      {state.ok && (
+        <p role="status" className="rounded-control border border-positive/25 bg-positive-bg px-3 py-2 text-sm text-positive-ink">
+          Senha alterada. Use a nova senha no próximo acesso.
         </p>
       )}
       <div className="flex justify-end">

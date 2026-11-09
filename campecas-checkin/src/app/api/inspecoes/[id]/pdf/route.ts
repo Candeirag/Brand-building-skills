@@ -1,8 +1,8 @@
-import { createElement, type ReactElement } from "react";
-import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth";
-import { InspectionReport, type ReportPhoto } from "@/lib/pdf/inspection-report";
+import type { ReportPhoto } from "@/lib/pdf/inspection-report";
+import { pdfResponse, renderReportPdf } from "@/lib/pdf/render";
+import { maskDocument } from "@/lib/format";
 import { PHOTO_BUCKET } from "@/lib/photos";
 import { createClient } from "@/lib/supabase/server";
 
@@ -54,21 +54,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }),
   );
 
-  const element = createElement(InspectionReport, {
-    inspection,
+  const i = inspection;
+  const pdf = await renderReportPdf({
+    inspection: i,
     items: itemsRes.data ?? [],
     photos,
-    generatedAt: new Date(),
-  }) as unknown as ReactElement<DocumentProps>;
-
-  const pdf = await renderToBuffer(element);
-  const filename = `${inspection.number ?? `rascunho-${inspection.plate ?? id.slice(0, 8)}`}.pdf`;
-
-  return new NextResponse(new Uint8Array(pdf), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${filename}"`,
-      "Cache-Control": "private, no-store",
-    },
+    maskedDocument: i.owner_document ? maskDocument(i.owner_document) : null,
+    contactPhone: i.owner_whatsapp ?? i.owner_phone,
   });
+  const filename = `${i.number ?? `rascunho-${i.plate ?? id.slice(0, 8)}`}.pdf`;
+  return pdfResponse(pdf, filename);
 }

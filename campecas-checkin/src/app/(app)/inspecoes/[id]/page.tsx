@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CheckCircle2, FileDown, MessageCircle, Plus } from "lucide-react";
-import { createInspection } from "../actions";
+import { CheckCircle2, FileDown } from "lucide-react";
+import { ReportShare } from "@/components/inspection/report-share";
+import { createClient } from "@/lib/supabase/server";
+import { pickContactNumber } from "@/lib/whatsapp";
+import { NewInspectionButton } from "@/components/inspection/new-inspection-button";
 import { DamageMap } from "@/components/inspection/damage-map";
 import { PhotoGallery, type GalleryGroup } from "@/components/inspection/photo-gallery";
 import { buttonClass } from "@/components/ui/button";
@@ -13,13 +16,11 @@ import { MAPPED_KEYS } from "@/lib/damage-map";
 import {
   formatDateTime,
   formatDocument,
-  formatKm,
   formatNumber,
   formatPhone,
   formatPlate,
   formatTime,
   maskDocument,
-  whatsappLink,
 } from "@/lib/format";
 import { loadInspection } from "@/lib/inspection-data";
 import { PHOTO_CATEGORIES } from "@/lib/photos";
@@ -84,13 +85,26 @@ export default async function InspectionPage({
   }));
   const missingAngles = PHOTO_CATEGORIES.filter((c) => c.recommended && !photos.some((p) => p.category === c.value));
 
-  const contact = i.owner_whatsapp ?? i.owner_phone;
-  const waText = `Olá${i.owner_name ? `, ${i.owner_name.split(" ")[0]}` : ""}! Registramos a entrada do seu veículo ${formatPlate(
-    i.plate,
-  )} na CAMPEÇAS em ${formatDateTime(i.finalized_at)}. Inspeção nº ${i.number}, quilometragem ${formatKm(i.mileage)}${
-    damaged.length ? `, com ${damaged.length} avaria(s) preexistente(s) registrada(s)` : ", sem avarias registradas"
-  }. Qualquer dúvida, estamos à disposição.`;
-  const wa = whatsappLink(contact, waText);
+  // Laudo do cliente: link ativo (se houver) e último envio pelo WhatsApp.
+  const supabase = await createClient();
+  const [linkRes, deliveryRes] = await Promise.all([
+    supabase
+      .from("report_links")
+      .select("token, expires_at")
+      .eq("inspection_id", id)
+      .is("revoked_at", null)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("report_deliveries")
+      .select("sent_at, sent_by_name")
+      .eq("inspection_id", id)
+      .order("sent_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
   const isAdmin = profile.role === "admin";
   const vehicleName = [i.brand, i.model].filter(Boolean).join(" ");
 
@@ -112,11 +126,9 @@ export default async function InspectionPage({
               registro não pode mais ser alterado.
             </span>
           </p>
-          <form action={createInspection} className="flex-none">
-            <button type="submit" className={buttonClass("outline", "md", "w-full")}>
-              <Plus size={16} /> Próxima inspeção
-            </button>
-          </form>
+          <div className="flex-none">
+            <NewInspectionButton label="Próxima inspeção" variant="outline" className="w-full sm:h-9" />
+          </div>
         </div>
       )}
 
@@ -144,14 +156,9 @@ export default async function InspectionPage({
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex">
-          <a href={`/api/inspecoes/${i.id}/pdf`} target="_blank" rel="noopener" className={buttonClass("primary", "lg", "col-span-2 sm:h-10")}>
+          <a href={`/api/inspecoes/${i.id}/pdf`} target="_blank" rel="noopener" className={buttonClass("outline", "lg", "sm:h-10")}>
             <FileDown size={18} /> Relatório PDF
           </a>
-          {wa && (
-            <a href={wa} target="_blank" rel="noopener noreferrer" className={buttonClass("outline", "lg", "sm:h-10")}>
-              <MessageCircle size={18} /> WhatsApp
-            </a>
-          )}
           {i.plate && (
             <Link href={`/veiculos/${i.plate}`} className={buttonClass("outline", "lg", "sm:h-10")}>
               Histórico do veículo
@@ -159,6 +166,14 @@ export default async function InspectionPage({
           )}
         </div>
       </div>
+
+      <ReportShare
+        inspectionId={i.id}
+        contactNumber={pickContactNumber(i.owner_whatsapp, i.owner_phone)}
+        message={{ ownerName: i.owner_name, brand: i.brand, model: i.model, plate: i.plate, registeredAt: i.started_at }}
+        activeLink={linkRes.data ? { token: linkRes.data.token, expiresAt: linkRes.data.expires_at } : null}
+        lastDelivery={deliveryRes.data ? { sentAt: deliveryRes.data.sent_at, sentBy: deliveryRes.data.sent_by_name } : null}
+      />
 
       <section aria-label="Resumo" className="panel mt-6 grid grid-cols-2 md:grid-cols-4">
         {kpis.map((k, idx) => (
@@ -176,6 +191,15 @@ export default async function InspectionPage({
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_384px]">
         <div className="min-w-0 space-y-6">
+          {i.service_request && (
+            <section className="panel p-5" aria-labelledby="servico">
+              <h2 id="servico" className="h2">
+                Serviço solicitado
+              </h2>
+              <p className="mt-1 text-[15px] whitespace-pre-line">{i.service_request}</p>
+            </section>
+          )}
+
           <section className="panel p-5" aria-labelledby="mapa">
             <h2 id="mapa" className="h2">
               Estado na entrada

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
 import { toInspectionPatch, type FormField, type InspectionForm } from "@/lib/inspection-form";
+import type { TablesUpdate } from "@/lib/supabase/database.types";
 import type { ItemsState, SaveState } from "./types";
 
 const SAVE_DELAY_MS = 900;
@@ -38,22 +39,37 @@ export function clearBackup(inspectionId: string) {
   }
 }
 
+/** Garante que o rascunho exista no banco; `created` indica se ESTA chamada o criou com o patch. */
+export type EnsureInspection = (patch: TablesUpdate<"inspections">) => Promise<{ id: string; created: boolean }>;
+
 /**
  * Salvamento automático do rascunho:
+ * - o rascunho só é criado no banco no primeiro salvamento (primeiro campo preenchido);
  * - grava no Supabase alguns instantes após cada alteração;
  * - mantém cópia no aparelho (localStorage) para não perder nada sem internet;
  * - reenvia ao reconectar, ao minimizar o app e periodicamente em caso de erro.
  */
-export function useAutosave(inspectionId: string, form: InspectionForm, items: ItemsState) {
+export function useAutosave(options: {
+  getId: () => string | null;
+  ensureInspection: EnsureInspection;
+  form: InspectionForm;
+  items: ItemsState;
+  /** Campos já preenchidos ao abrir (ex.: placa vinda do histórico do veículo); vão no primeiro salvamento. */
+  initialDirty?: FormField[];
+}) {
+  const { getId, ensureInspection, form, items, initialDirty } = options;
   const formRef = useRef(form);
   const itemsRef = useRef(items);
-  const dirtyFields = useRef(new Set<FormField>());
+  const dirtyFields = useRef(new Set<FormField>(initialDirty ?? []));
   const dirtyItems = useRef(new Set<string>());
+  const userTouched = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const inFlight = useRef<Promise<boolean> | null>(null);
   const [state, setState] = useState<SaveState>({ kind: "idle" });
 
   const persistBackup = useCallback(() => {
+    const inspectionId = getId();
+    if (!inspectionId) return; // ainda não existe no banco
     try {
       const backup: DraftBackup = {
         form: formRef.current,
@@ -66,7 +82,7 @@ export function useAutosave(inspectionId: string, form: InspectionForm, items: I
     } catch {
       // armazenamento indisponível
     }
-  }, [inspectionId]);
+  }, [getId]);
 
   // Mantém as referências atualizadas e a cópia local sempre em dia.
   useEffect(() => {
@@ -85,6 +101,8 @@ export function useAutosave(inspectionId: string, form: InspectionForm, items: I
   const doFlush = useCallback(async (): Promise<boolean> => {
     clearTimeout(timer.current);
     if (!dirtyFields.current.size && !dirtyItems.current.size) return true;
+    // Sem nenhuma mudança real do usuário (só campos pré-preenchidos), não cria o rascunho.
+    if (!getId() && !userTouched.current) return true;
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       setState({ kind: "offline" });
       return false;
@@ -98,7 +116,14 @@ export function useAutosave(inspectionId: string, form: InspectionForm, items: I
 
     const supabase = createClient();
     try {
-      if (fields.length) {
+      let inspectionId = getId();
+      let fieldsApplied = false;
+      if (!inspectionId) {
+        const res = await ensureInspection(toInspectionPatch(formRef.current, fields));
+        inspectionId = res.id;
+        fieldsApplied = res.created;
+      }
+      if (fields.length && !fieldsApplied) {
         const { data, error } = await supabase
           .from("inspections")
           .update(toInspectionPatch(formRef.current, fields))
@@ -135,7 +160,7 @@ export function useAutosave(inspectionId: string, form: InspectionForm, items: I
       schedule(RETRY_DELAY_MS);
       return false;
     }
-  }, [inspectionId, persistBackup, schedule]);
+  }, [getId, ensureInspection, persistBackup, schedule]);
 
   /** Salva imediatamente (aguarda um salvamento em andamento). */
   const flush = useCallback(async (): Promise<boolean> => {
@@ -155,6 +180,7 @@ export function useAutosave(inspectionId: string, form: InspectionForm, items: I
 
   const markField = useCallback(
     (...fields: FormField[]) => {
+      userTouched.current = true;
       fields.forEach((f) => dirtyFields.current.add(f));
       schedule();
     },
@@ -163,6 +189,7 @@ export function useAutosave(inspectionId: string, form: InspectionForm, items: I
 
   const markItem = useCallback(
     (...keys: string[]) => {
+      userTouched.current = true;
       keys.forEach((k) => dirtyItems.current.add(k));
       schedule();
     },

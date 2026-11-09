@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { Plus } from "lucide-react";
-import { createInspection } from "../actions";
+import { NewInspectionButton } from "@/components/inspection/new-inspection-button";
 import { InspectionRow, InspectionTableHeader } from "@/components/inspection/inspection-row";
-import { buttonClass } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireStaff } from "@/lib/auth";
 import { INSPECTION_ROW_SELECT, toRowData, type InspectionRowData } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 import { elapsed } from "@/lib/time";
+import { plural } from "@/lib/plural";
 
 export const metadata: Metadata = { title: "Em andamento" };
 
@@ -20,6 +19,7 @@ export default async function DraftsPage() {
     .from("inspections")
     .select(`${INSPECTION_ROW_SELECT}, inspector_id`)
     .eq("status", "draft")
+    .eq("is_blank", false)
     .order("started_at", { ascending: true })
     .limit(100);
 
@@ -35,15 +35,13 @@ export default async function DraftsPage() {
           <h1 className="h1">Inspeções em andamento</h1>
           <p className="mt-1 text-[15px] text-muted">
             {all.length
-              ? `${all.length} aberta${all.length > 1 ? "s" : ""}; a mais antiga começou ${elapsed(oldest!.started_at, now)}. O rascunho é salvo automaticamente.`
+              ? `${plural(all.length, "aberta", "abertas")}; a mais antiga começou ${elapsed(oldest!.started_at, now)}. O rascunho é salvo automaticamente.`
               : "Nenhum rascunho aberto. Todas as inspeções foram finalizadas."}
           </p>
         </div>
-        <form action={createInspection} className="flex-none">
-          <button type="submit" className={buttonClass("primary", "lg", "w-full sm:h-10 sm:w-auto")}>
-            <Plus size={18} strokeWidth={2.25} /> Nova inspeção
-          </button>
-        </form>
+        <div className="flex-none">
+          <NewInspectionButton />
+        </div>
       </div>
 
       <div className="mt-6 space-y-6">

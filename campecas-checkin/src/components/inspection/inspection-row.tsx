@@ -34,7 +34,9 @@ export function InspectionRow({ item, now }: { item: InspectionRowData; now: Dat
   const today = isoDateInSaoPaulo(new Date(when)) === isoDateInSaoPaulo(now);
   const secondary = draft
     ? `${item.inspector_name ?? "–"} · aberta ${elapsed(item.started_at, now)}`
-    : `${item.owner_name ?? "Proprietário não informado"} · ${item.number}`;
+    : `${item.owner_name ?? "Proprietário não informado"} · ${item.number}${
+        item.lastSentAt ? ` · laudo enviado em ${formatDate(item.lastSentAt)} às ${formatTime(item.lastSentAt)}` : ""
+      }`;
 
   return (
     <li className="border-t border-rule first:border-t-0">

@@ -46,12 +46,12 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
     return qy;
   }
 
-  let list = scoped(supabase.from("inspections").select(INSPECTION_ROW_SELECT, { count: "exact" }));
+  let list = scoped(supabase.from("inspections").select(INSPECTION_ROW_SELECT, { count: "exact" }).eq("is_blank", false));
   if (status) list = list.eq("status", status);
   list = list.order("started_at", { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
   const countFor = (s: Status) => {
-    let c = scoped(supabase.from("inspections").select("id", { count: "exact", head: true }));
+    let c = scoped(supabase.from("inspections").select("id", { count: "exact", head: true }).eq("is_blank", false));
     if (s) c = c.eq("status", s);
     return c;
   };
@@ -87,7 +87,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
     <main className="mx-auto max-w-[1280px] px-4 pt-5 lg:px-8 lg:pt-8">
       <h1 className="h1">Histórico de inspeções</h1>
       <p className="mt-1 text-[15px] text-muted">
-        {formatNumber(tabs[0]!.count)} inspeç{tabs[0]!.count === 1 ? "ão" : "ões"}
+        {formatNumber(tabs[0]!.count)} {tabs[0]!.count === 1 ? "inspeção" : "inspeções"}
         {q ? ` para “${q}”` : ""} {period}
       </p>
 

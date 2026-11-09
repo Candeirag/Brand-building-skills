@@ -41,3 +41,15 @@ describe("formatação", () => {
     expect(whatsappLink("123")).toBeNull();
   });
 });
+
+import { pick, plural } from "@/lib/plural";
+
+describe("concordância", () => {
+  it("singular e plural", () => {
+    expect(plural(1, "avaria", "avarias")).toBe("1 avaria");
+    expect(plural(0, "avaria", "avarias")).toBe("0 avarias");
+    expect(plural(2, "item", "itens")).toBe("2 itens");
+    expect(pick(1, "vai", "vão")).toBe("vai");
+    expect(pick(3, "vai", "vão")).toBe("vão");
+  });
+});

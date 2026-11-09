@@ -91,7 +91,10 @@ export function FinalizeSection({
       {damagedLabels.length > 0 && (
         <div className="mt-6 rounded-card border border-tint-2 bg-tint px-4 py-3">
           <p className="flex items-center gap-2 text-sm font-medium text-accent-ink">
-            <AlertTriangle size={16} /> {damagedLabels.length} avaria{damagedLabels.length > 1 ? "s" : ""} preexistente{damagedLabels.length > 1 ? "s" : ""} vão para o laudo
+            <AlertTriangle size={16} />{" "}
+            {damagedLabels.length === 1
+              ? "1 avaria preexistente vai para o laudo"
+              : `${damagedLabels.length} avarias preexistentes vão para o laudo`}
           </p>
           <p className="mt-0.5 text-sm text-ink">{damagedLabels.join(" · ")}</p>
         </div>

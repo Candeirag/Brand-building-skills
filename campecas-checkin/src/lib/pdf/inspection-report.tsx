@@ -1,9 +1,10 @@
 import { Document, Image, Page, Path, Rect, StyleSheet, Svg, Text, View } from "@react-pdf/renderer";
 import { BRAND_DARK, BRAND_RED, LOGO_VIEWBOX, MARK_PATHS, WORD_PATHS } from "@/lib/brand";
 import { CHECKLIST_STATUS, fuelLabel, groupItems } from "@/lib/checklist";
-import { formatDateTime, formatKm, formatPhone, formatPlate, maskDocument } from "@/lib/format";
+import { formatDateTime, formatKm, formatPhone, formatPlate } from "@/lib/format";
 import { BODY_PATH, MAP_VIEWBOX, MAP_ZONES, ROOF_RECT, ZONE_STYLE, zoneState } from "@/lib/damage-map";
 import { PHOTO_CATEGORIES } from "@/lib/photos";
+import { workshopLines } from "@/lib/workshop";
 import type { Tables } from "@/lib/supabase/database.types";
 
 const C = {
@@ -73,11 +74,26 @@ export type ReportPhoto = {
   data: Buffer | null;
 };
 
+export type ReportInspection = Pick<
+  Tables<"inspections">,
+  | "number" | "status" | "plate" | "brand" | "model" | "year" | "color" | "mileage" | "fuel_level"
+  | "owner_name" | "notes" | "service_request" | "inspector_name" | "mechanic_name" | "started_at" | "finalized_at"
+>;
+
+export type ReportItem = Pick<
+  Tables<"inspection_items">,
+  "item_key" | "item_label" | "group_name" | "position" | "status" | "notes"
+>;
+
 export type ReportProps = {
-  inspection: Tables<"inspections">;
-  items: Tables<"inspection_items">[];
+  inspection: ReportInspection;
+  items: ReportItem[];
   photos: ReportPhoto[];
   generatedAt: Date;
+  /** CPF/CNPJ já mascarado. */
+  maskedDocument: string | null;
+  /** Telefone de contato (só no PDF interno; o laudo público não mostra telefone). */
+  contactPhone: string | null;
 };
 
 function Field({ label, value, wide }: { label: string; value: string | number | null | undefined; wide?: boolean }) {
@@ -151,7 +167,8 @@ function DamageMapPdf({ statusByKey }: { statusByKey: Record<string, Tables<"ins
   );
 }
 
-export function InspectionReport({ inspection: i, items, photos, generatedAt }: ReportProps) {
+export function InspectionReport({ inspection: i, items, photos, generatedAt, maskedDocument, contactPhone }: ReportProps) {
+  const shop = workshopLines();
   const damaged = items.filter((it) => it.status === "damaged");
   const groups = groupItems(items);
   const half = Math.ceil(groups.length / 2);
@@ -214,10 +231,17 @@ export function InspectionReport({ inspection: i, items, photos, generatedAt }: 
             <Text style={s.sectionTitle}>Proprietário</Text>
             <View style={s.grid}>
               <Field label="Nome" value={i.owner_name} wide />
-              <Field label="CPF/CNPJ" value={i.owner_document ? maskDocument(i.owner_document) : null} />
-              <Field label="Telefone / WhatsApp" value={formatPhone(i.owner_whatsapp ?? i.owner_phone)} />
+              <Field label="CPF/CNPJ" value={maskedDocument} />
+              {contactPhone !== null && <Field label="Telefone / WhatsApp" value={formatPhone(contactPhone)} />}
             </View>
           </View>
+
+          {i.service_request && (
+            <View style={s.section} wrap={false}>
+              <Text style={s.sectionTitle}>Serviço solicitado / queixa do cliente</Text>
+              <Text style={s.notes}>{i.service_request}</Text>
+            </View>
+          )}
 
           <View style={s.section}>
             <Text style={s.sectionTitle}>Checklist de inspeção</Text>
@@ -233,7 +257,7 @@ export function InspectionReport({ inspection: i, items, photos, generatedAt }: 
                           <View key={it.item_key} style={s.itemRow}>
                             <Text style={s.itemLabel}>
                               {it.item_label}
-                              {it.item_key === "fuel" && i.fuel_level ? ` (${fuelLabel(i.fuel_level)})` : ""}
+
                             </Text>
                             <Text style={[s.pill, { backgroundColor: pill.bg, color: pill.fg }]}>
                               {it.status ? CHECKLIST_STATUS[it.status].label : "Pendente"}
@@ -321,7 +345,8 @@ export function InspectionReport({ inspection: i, items, photos, generatedAt }: 
 
         <View style={s.footer} fixed>
           <Text>
-            CAMPEÇAS CHECK-IN · Gerado em {formatDateTime(generatedAt)} · Dados pessoais tratados conforme a LGPD (Lei 13.709/2018)
+            {shop.length ? `${shop.join(" · ")} · ` : ""}Gerado em {formatDateTime(generatedAt)} · Dados pessoais tratados conforme a
+            LGPD (Lei 13.709/2018)
           </Text>
           <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
         </View>

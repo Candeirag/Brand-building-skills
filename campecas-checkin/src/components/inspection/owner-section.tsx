@@ -62,7 +62,7 @@ export function OwnerSection({
     <SectionCard
       id="proprietario"
       title="Proprietário"
-      subtitle="Identificação e contato do cliente"
+      subtitle="Identificação, contato e o que o cliente pediu"
       complete={ownerSectionComplete(form)}
     >
       <div className="mb-5 rounded-card bg-raised p-3 sm:p-4">
@@ -195,6 +195,26 @@ export function OwnerSection({
             </button>
           )}
         </div>
+      </div>
+
+      <div className="mt-5">
+        <label htmlFor="service-request" className="field-label">
+          Serviço solicitado / queixa do cliente
+        </label>
+        <textarea
+          id="service-request"
+          value={form.service_request}
+          onChange={(e) => update("service_request", e.target.value)}
+          maxLength={2000}
+          rows={3}
+          required
+          aria-describedby="service-request-hint"
+          placeholder="Ex.: barulho na suspensão dianteira ao passar em lombadas; revisão dos 60 mil km"
+          className="field-textarea"
+        />
+        <p id="service-request-hint" className="mt-1.5 text-sm text-muted">
+          Obrigatório. Aparece no laudo enviado ao cliente e no PDF.
+        </p>
       </div>
 
       <p className="mt-5 flex gap-2 text-xs leading-relaxed text-muted">

@@ -25,6 +25,7 @@ const base: InspectionForm = {
   mechanic_name: "João",
   mechanic_id: null,
   notes: "",
+  service_request: "Revisão dos freios",
   checklist_confirmed: true,
 };
 
@@ -69,10 +70,31 @@ describe("validação e pendências", () => {
     expect(progress).toMatchObject({ total: 3, answered: 2, damaged: 1, damagedWithoutNotes: 1, complete: false });
     const issues = finalizationIssues({ ...base, mechanic_name: "", checklist_confirmed: false }, progress);
     expect(issues).toEqual([
-      "Responda 1 item(ns) do checklist",
-      "Descreva 1 avaria(s)",
+      "Responda 1 item do checklist",
+      "Descreva 1 avaria",
       "Informe o mecânico responsável",
       "Confirme que o checklist foi concluído",
+    ]);
+  });
+  it("concordância no plural e fotos obrigatórias", () => {
+    const progress = checklistProgress([
+      { status: null, notes: null },
+      { status: null, notes: null },
+      { status: "damaged", notes: "" },
+      { status: "damaged", notes: "" },
+    ]);
+    const issues = finalizationIssues({ ...base, service_request: " " }, progress, {
+      hasFront: false,
+      hasDashboard: false,
+      damagedWithoutPhoto: ["Capô"],
+    });
+    expect(issues).toEqual([
+      "Descreva o serviço solicitado pelo cliente",
+      "Responda 2 itens do checklist",
+      "Descreva 2 avarias",
+      "Fotografe a frente do veículo",
+      "Fotografe o painel com a quilometragem",
+      "Fotografe a avaria: Capô",
     ]);
   });
   it("sem pendências quando completo", () => {

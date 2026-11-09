@@ -4,10 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, ChevronRight, X } from "lucide-react";
-import { deleteDraft, finalizeInspection } from "@/app/(app)/inspecoes/actions";
+import { createDraftInspection, deleteDraft, finalizeInspection } from "@/app/(app)/inspecoes/actions";
 import { checklistProgress, type ChecklistItemState, type ChecklistStatus, type FuelLevel } from "@/lib/checklist";
 import { formatDateTime, formatKm, formatPlate } from "@/lib/format";
 import {
+  emptyForm,
   finalizationIssues,
   formFromInspection,
   ownerSectionComplete,
@@ -18,7 +19,8 @@ import {
 } from "@/lib/inspection-form";
 import { PHOTO_BUCKET, PHOTO_CATEGORIES, type PhotoCategory } from "@/lib/photos";
 import { createClient } from "@/lib/supabase/client";
-import type { Tables } from "@/lib/supabase/database.types";
+import type { Tables, TablesUpdate } from "@/lib/supabase/database.types";
+import { plural } from "@/lib/plural";
 import { formatDocument, formatPhone } from "@/lib/format";
 import { isValidPlate, normalizePlate } from "@/lib/validation";
 import { ChecklistSection } from "./checklist-section";
@@ -29,22 +31,62 @@ import { OwnerSection } from "./owner-section";
 import { PhotosSection } from "./photos-section";
 import { SaveIndicator } from "./save-indicator";
 import type { ItemsState, Mechanic, PendingUpload, PhotoView } from "./types";
-import { clearBackup, readBackup, useAutosave } from "./use-autosave";
+import { clearBackup, readBackup, useAutosave, type EnsureInspection } from "./use-autosave";
 import { VehicleSection, type VehicleLookup } from "./vehicle-section";
 
 type Props = {
-  inspection: Tables<"inspections">;
+  /** null = inspeção nova, ainda não gravada (o rascunho nasce no primeiro campo preenchido). */
+  inspection: Tables<"inspections"> | null;
   initialItems: ChecklistItemState[];
   initialPhotos: PhotoView[];
   mechanics: Mechanic[];
   canDelete: boolean;
+  inspectorName: string;
+  initialPlate?: string;
 };
 
-export function InspectionEditor({ inspection, initialItems, initialPhotos, mechanics, canDelete }: Props) {
+export function InspectionEditor({
+  inspection,
+  initialItems,
+  initialPhotos,
+  mechanics,
+  canDelete,
+  inspectorName,
+  initialPlate,
+}: Props) {
   const router = useRouter();
-  const inspectionId = inspection.id;
 
-  const [form, setForm] = useState<InspectionForm>(() => formFromInspection(inspection));
+  // Id do rascunho: nasce no primeiro salvamento quando a inspeção é nova.
+  const [inspectionId, setInspectionId] = useState<string | null>(inspection?.id ?? null);
+  const [startedAt, setStartedAt] = useState<string | null>(inspection?.started_at ?? null);
+  const idRef = useRef<string | null>(inspection?.id ?? null);
+  const creatingRef = useRef<Promise<string> | null>(null);
+  const getId = useCallback(() => idRef.current, []);
+
+  /** Cria o rascunho uma única vez, mesmo com várias chamadas simultâneas (salvamento e foto). */
+  const ensureInspection = useCallback<EnsureInspection>(async (patch: TablesUpdate<"inspections">) => {
+    if (idRef.current) return { id: idRef.current, created: false };
+    if (creatingRef.current) return { id: await creatingRef.current, created: false };
+    const creation = createDraftInspection(patch).then((res) => {
+      if (!res.ok) throw new Error(res.error);
+      idRef.current = res.id;
+      setInspectionId(res.id);
+      setStartedAt(res.started_at);
+      window.history.replaceState(null, "", `/inspecoes/${res.id}/editar`);
+      return res.id;
+    });
+    creatingRef.current = creation;
+    try {
+      return { id: await creation, created: true };
+    } catch (error) {
+      creatingRef.current = null;
+      throw error;
+    }
+  }, []);
+
+  const [form, setForm] = useState<InspectionForm>(() =>
+    inspection ? formFromInspection(inspection) : emptyForm(inspectorName, initialPlate),
+  );
   const [items, setItems] = useState<ItemsState>(() =>
     Object.fromEntries(initialItems.map((i) => [i.item_key, i])),
   );
@@ -57,13 +99,21 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
   const [finalizeError, setFinalizeError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const { state: saveState, markField, markItem, flush } = useAutosave(inspectionId, form, items);
+  const { state: saveState, markField, markItem, flush } = useAutosave({
+    getId,
+    ensureInspection,
+    form,
+    items,
+    initialDirty: !inspection && initialPlate ? ["plate"] : undefined,
+  });
 
   // ---------------------------------------------------------------------------
   // Recupera alterações não sincronizadas guardadas neste aparelho.
   // ---------------------------------------------------------------------------
+  const initialId = inspection?.id ?? null;
   useEffect(() => {
-    const backup = readBackup(inspectionId);
+    if (!initialId) return;
+    const backup = readBackup(initialId);
     if (!backup || (!backup.dirtyFields.length && !backup.dirtyItems.length)) return;
     const fields = backup.dirtyFields.filter((f) => f in backup.form);
     const keys = backup.dirtyItems.filter((k) => backup.items[k]);
@@ -83,7 +133,7 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
     if (fields.length) markField(...fields);
     if (keys.length) markItem(...keys);
     setNotice("Recuperamos alterações feitas neste aparelho que ainda não tinham sido enviadas.");
-  }, [inspectionId, markField, markItem]);
+  }, [initialId, markField, markItem]);
 
   // ---------------------------------------------------------------------------
   // Atualização de campos
@@ -235,9 +285,10 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
     [markItem],
   );
 
-  const markRemainingOk = useCallback(() => {
+  /** "Marcar seção como Normal": só os itens ainda sem resposta daquela seção. */
+  const markSectionOk = useCallback((groupName: string) => {
     const keys = Object.values(items)
-      .filter((i) => i.status === null)
+      .filter((i) => i.group_name === groupName && i.status === null)
       .map((i) => i.item_key);
     if (!keys.length) return;
     setItems((prev) => {
@@ -261,6 +312,8 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
         const plate = formatPlate(formRef.current.plate);
         const stamp = `CAMPEÇAS · ${plate === "–" ? "SEM PLACA" : plate} · ${formatDateTime(new Date())}`;
         const { blob, width, height } = await compressImage(upload.file, stamp);
+        // A primeira foto também cria o rascunho, se ele ainda não existir.
+        const { id: inspectionId } = await ensureInspection({});
         const path = `${inspectionId}/${upload.category}/${crypto.randomUUID()}.jpg`;
 
         const { error: uploadError } = await supabase.storage
@@ -301,6 +354,7 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
         ]);
         setPending((prev) => prev.filter((p) => p.tempId !== upload.tempId));
         URL.revokeObjectURL(upload.previewUrl);
+        setFinalizeError(null);
       } catch {
         const offline = typeof navigator !== "undefined" && !navigator.onLine;
         setPending((prev) =>
@@ -310,7 +364,7 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
         );
       }
     },
-    [inspectionId],
+    [ensureInspection],
   );
 
   const pendingRef = useRef(pending);
@@ -377,24 +431,29 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
   // ---------------------------------------------------------------------------
   const itemList = useMemo(() => Object.values(items), [items]);
   const progress = checklistProgress(itemList);
-  const issues = finalizationIssues(form, progress);
+  const photoRequirements = {
+    hasFront: photos.some((p) => p.category === "front"),
+    hasDashboard: photos.some((p) => p.category === "dashboard"),
+    damagedWithoutPhoto: itemList
+      .filter((i) => i.status === "damaged" && !photos.some((p) => p.item_key === i.item_key))
+      .sort((a, b) => a.position - b.position)
+      .map((i) => i.item_label),
+  };
+  const issues = finalizationIssues(form, progress, photoRequirements);
 
   const warnings = useMemo(() => {
     const w: string[] = [];
-    const missing = PHOTO_CATEGORIES.filter((c) => c.recommended && !photos.some((p) => p.category === c.value));
-    if (missing.length) w.push(`Fotos recomendadas faltando: ${missing.map((m) => m.label).join(", ")}.`);
-    const damagedNoPhoto = itemList.filter(
-      (i) => i.status === "damaged" && !photos.some((p) => p.item_key === i.item_key),
+    const missing = PHOTO_CATEGORIES.filter(
+      (c) => c.recommended && !c.required && !photos.some((p) => p.category === c.value),
     );
-    if (damagedNoPhoto.length)
-      w.push(`Avarias sem foto: ${damagedNoPhoto.map((i) => i.item_label).join(", ")}.`);
+    if (missing.length) w.push(`Fotos recomendadas faltando: ${missing.map((m) => m.label.toLowerCase()).join(", ")}.`);
     const km = parseMileage(form.mileage);
     const last = lookup?.last_mileage ?? lookup?.last_inspection?.mileage;
     if (km !== null && last != null && km < last)
       w.push(`Quilometragem menor que a última registrada (${formatKm(last)}). Confira o hodômetro.`);
     if (pending.length) w.push("Há fotos aguardando envio.");
     return w;
-  }, [photos, itemList, form.mileage, lookup, pending.length]);
+  }, [photos, form.mileage, lookup, pending.length]);
 
   const damagedLabels = itemList.filter((i) => i.status === "damaged").map((i) => i.item_label);
 
@@ -406,7 +465,8 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
     }
     setFinalizing(true);
     const saved = await flush();
-    if (!saved) {
+    const inspectionId = idRef.current;
+    if (!saved || !inspectionId) {
       setFinalizing(false);
       setFinalizeError("Não foi possível salvar as últimas alterações. Verifique a conexão e tente novamente.");
       return;
@@ -422,6 +482,11 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
   }
 
   async function handleDelete() {
+    const inspectionId = idRef.current;
+    if (!inspectionId) {
+      router.replace("/"); // nada foi gravado ainda
+      return;
+    }
     if (!window.confirm("Excluir este rascunho e todas as fotos? Esta ação não pode ser desfeita.")) return;
     const result = await deleteDraft(inspectionId);
     if (!result.ok) {
@@ -439,7 +504,7 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
     {
       id: "fotos",
       label: "Fotos",
-      done: PHOTO_CATEGORIES.filter((c) => c.recommended).every((c) => photos.some((p) => p.category === c.value)),
+      done: photoRequirements.hasFront && photoRequirements.hasDashboard && photoRequirements.damagedWithoutPhoto.length === 0,
     },
     { id: "finalizacao", label: "Finalizar", done: issues.length === 0 },
   ];
@@ -460,7 +525,7 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
             ) : (
               "Nova inspeção"
             )}
-            <span className="ml-2 text-sm font-normal text-muted">rascunho</span>
+            <span className="ml-2 text-sm font-normal text-muted">{inspectionId ? "rascunho" : "não salva ainda"}</span>
           </h1>
           <SaveIndicator state={saveState} />
         </div>
@@ -496,18 +561,18 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
         <VehicleSection
           form={form}
           update={update}
-          startedAt={inspection.started_at}
+          startedAt={startedAt}
           lookup={lookup}
           lookingUp={lookingUp}
+          fuelLevel={form.fuel_level}
+          setFuelLevel={(v: FuelLevel) => update("fuel_level", v)}
         />
         <OwnerSection form={form} update={update} applyCustomer={applyCustomer} />
         <ChecklistSection
           items={items}
           setStatus={setStatus}
           setNotes={setNotes}
-          markRemainingOk={markRemainingOk}
-          fuelLevel={form.fuel_level}
-          setFuelLevel={(v: FuelLevel) => update("fuel_level", v)}
+          markSectionOk={markSectionOk}
           photoHandlers={{
             photos,
             pending,
@@ -538,7 +603,7 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
           finalizeError={finalizeError}
           onFinalize={() => void handleFinalize()}
           onDelete={() => void handleDelete()}
-          canDelete={canDelete}
+          canDelete={canDelete || !inspectionId}
         />
       </main>
 
@@ -547,8 +612,7 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
         <p className="min-w-0 flex-1 text-sm">
           {issues.length ? (
             <>
-              <span className="num font-medium">{issues.length}</span>
-              <span className="text-muted"> pendência{issues.length > 1 ? "s" : ""} para finalizar</span>
+              <span className="text-muted">{plural(issues.length, "pendência", "pendências")} para finalizar</span>
             </>
           ) : (
             <span className="font-medium text-positive">Pronta para finalizar</span>

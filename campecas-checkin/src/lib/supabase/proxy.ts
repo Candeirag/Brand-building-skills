@@ -3,11 +3,19 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./database.types";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
 
-const PUBLIC_PATHS = ["/login", "/privacidade"];
+// /laudo: laudo público do cliente (o token é validado no servidor, em public_report()).
+const PUBLIC_PATHS = ["/login", "/privacidade", "/laudo"];
 
 /** Renova a sessão a cada requisição e protege as rotas internas. */
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const path = request.nextUrl.pathname;
+  // Repassa o caminho para o servidor (usado no redirecionamento da senha provisória).
+  const next = () => {
+    const headers = new Headers(request.headers);
+    headers.set("x-pathname", path);
+    return NextResponse.next({ request: { headers } });
+  };
+  let response = next();
 
   const supabase = createServerClient<Database>(SUPABASE_URL(), SUPABASE_ANON_KEY(), {
     cookies: {
@@ -16,7 +24,7 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        response = next();
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
@@ -26,7 +34,6 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const isAuthenticated = Boolean(data?.claims?.sub);
 
-  const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 
   if (!isAuthenticated && !isPublic) {

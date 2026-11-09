@@ -4,6 +4,7 @@ import { CustomerPrivacy } from "@/components/team/customer-privacy";
 import { requireAdmin } from "@/lib/auth";
 import { onlyDigits, sanitizeSearch } from "@/lib/validation";
 import { createClient } from "@/lib/supabase/server";
+import { plural } from "@/lib/plural";
 
 export const metadata: Metadata = { title: "Equipe e acessos" };
 
@@ -50,7 +51,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
     <main className="mx-auto max-w-[1280px] px-4 pt-5 lg:px-8 lg:pt-8">
       <h1 className="h1">Equipe e acessos</h1>
       <p className="mt-1 mb-8 text-[15px] text-muted">
-        {active} funcionário{active === 1 ? "" : "s"} com acesso. Só quem está cadastrado aqui entra no sistema.
+        {plural(active, "funcionário", "funcionários")} com acesso. Só quem está cadastrado aqui entra no sistema.
       </p>
 
       <SettingsRow

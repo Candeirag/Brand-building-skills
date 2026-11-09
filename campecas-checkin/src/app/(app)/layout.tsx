@@ -17,7 +17,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { count } = await supabase
     .from("inspections")
     .select("id", { count: "exact", head: true })
-    .eq("status", "draft");
+    .eq("status", "draft")
+    .eq("is_blank", false);
   const openCount = count ?? 0;
   const roleLabel = ROLE_LABELS[profile.role];
 

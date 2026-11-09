@@ -1,6 +1,7 @@
 "use client";
 
 import { PHOTO_CATEGORIES, type PhotoCategory } from "@/lib/photos";
+import { plural } from "@/lib/plural";
 import { SectionCard } from "./fields";
 import { CaptureButton, PendingTile, PhotoTile } from "./photo-widgets";
 import type { PendingUpload, PhotoView } from "./types";
@@ -22,15 +23,15 @@ export function PhotosSection({
   onRetry: (tempId: string) => void;
   onDiscard: (tempId: string) => void;
 }) {
-  const recommended = PHOTO_CATEGORIES.filter((c) => c.recommended);
-  const done = recommended.filter((c) => photos.some((p) => p.category === c.value)).length;
+  const required = PHOTO_CATEGORIES.filter((c) => c.required);
+  const done = required.filter((c) => photos.some((p) => p.category === c.value)).length;
 
   return (
     <SectionCard
       id="fotos"
       title="Fotografias"
-      subtitle={`${done} de ${recommended.length} ângulos recomendados · ${photos.length} foto${photos.length === 1 ? "" : "s"} no total`}
-      complete={done === recommended.length}
+      subtitle={`Frente e painel são obrigatórias, e uma foto de cada avaria · ${plural(photos.length, "foto", "fotos")} no total`}
+      complete={done === required.length}
     >
       <div className="space-y-5">
         {PHOTO_CATEGORIES.map((cat) => {
@@ -42,7 +43,12 @@ export function PhotosSection({
               <div className="mb-2 flex items-baseline justify-between gap-2">
                 <h3 className="text-sm font-medium">
                   {cat.label}
-                  {cat.recommended && catPhotos.length === 0 && <span className="ml-1.5 text-xs font-normal text-muted">recomendada</span>}
+                  {cat.required && catPhotos.length === 0 && (
+                    <span className="ml-1.5 text-xs font-medium text-accent-ink">obrigatória</span>
+                  )}
+                  {!cat.required && cat.recommended && catPhotos.length === 0 && (
+                    <span className="ml-1.5 text-xs font-normal text-muted">recomendada</span>
+                  )}
                 </h3>
                 <span className="hidden text-xs text-muted sm:inline">{cat.hint}</span>
               </div>

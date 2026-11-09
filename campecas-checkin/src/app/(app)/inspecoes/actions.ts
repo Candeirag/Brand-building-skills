@@ -1,33 +1,40 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyError } from "@/lib/errors";
 import { PHOTO_BUCKET } from "@/lib/photos";
-import { isValidPlate, normalizePlate } from "@/lib/validation";
+import type { TablesInsert, TablesUpdate } from "@/lib/supabase/database.types";
 
-/** Cria um rascunho de inspeção e abre a tela de preenchimento. */
-export async function createInspection(formData?: FormData) {
+// Campos que a tela pode enviar ao criar o rascunho (o resto é controlado pelo banco).
+const DRAFT_FIELDS = [
+  "plate", "brand", "model", "year", "color", "mileage", "fuel_level",
+  "owner_name", "owner_document", "owner_phone", "owner_whatsapp", "customer_id",
+  "inspector_name", "mechanic_name", "mechanic_id", "notes", "service_request",
+] as const;
+
+export type DraftResult = { ok: true; id: string; started_at: string } | { ok: false; error: string };
+
+/**
+ * Cria o rascunho no banco. Chamado pelo editor só quando a pessoa preenche o
+ * primeiro campo (ou tira a primeira foto), já com esses dados.
+ */
+export async function createDraftInspection(patch: TablesUpdate<"inspections">): Promise<DraftResult> {
   const profile = await requireStaff();
   const supabase = await createClient();
 
-  const plateInput = normalizePlate(String(formData?.get("plate") ?? ""));
-  const plate = isValidPlate(plateInput) ? plateInput : null;
-
-  const { data, error } = await supabase
-    .from("inspections")
-    .insert({ inspector_id: profile.id, inspector_name: profile.full_name, plate })
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    throw new Error(friendlyError(error, "Não foi possível iniciar a inspeção."));
+  const row: TablesInsert<"inspections"> = { inspector_id: profile.id, inspector_name: profile.full_name };
+  for (const key of DRAFT_FIELDS) {
+    if (key in patch) Object.assign(row, { [key]: patch[key] ?? null });
   }
+  if (!row.inspector_name) row.inspector_name = profile.full_name;
+
+  const { data, error } = await supabase.from("inspections").insert(row).select("id, started_at").single();
+  if (error || !data) return { ok: false, error: friendlyError(error, "Não foi possível iniciar a inspeção.") };
 
   revalidatePath("/");
-  redirect(`/inspecoes/${data.id}/editar${plate ? "?buscar=1" : ""}`);
+  return { ok: true, id: data.id, started_at: data.started_at };
 }
 
 export type ActionResult = { ok: true; number?: string } | { ok: false; error: string };
@@ -76,5 +83,38 @@ export async function deleteDraft(inspectionId: string): Promise<ActionResult> {
 
   revalidatePath("/");
   revalidatePath("/inspecoes/em-andamento");
+  return { ok: true };
+}
+
+export type LinkResult = { ok: true; token: string; expiresAt: string } | { ok: false; error: string };
+
+/** Gera (ou reaproveita) o link público do laudo de uma inspeção finalizada. */
+export async function getReportLink(inspectionId: string): Promise<LinkResult> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_or_create_report_link", { p_inspection_id: inspectionId });
+  const row = data?.[0];
+  if (error || !row) return { ok: false, error: friendlyError(error, "Não foi possível gerar o link do laudo.") };
+  return { ok: true, token: row.token, expiresAt: row.expires_at };
+}
+
+/** Registra na auditoria e na inspeção que o laudo foi enviado pelo WhatsApp. */
+export async function registerReportSent(inspectionId: string): Promise<{ ok: true; sentAt: string } | { ok: false; error: string }> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("register_report_delivery", { p_inspection_id: inspectionId });
+  if (error || !data) return { ok: false, error: friendlyError(error, "Não foi possível registrar o envio.") };
+  revalidatePath(`/inspecoes/${inspectionId}`);
+  revalidatePath("/historico");
+  return { ok: true, sentAt: data };
+}
+
+/** Revoga o link público do laudo (ele deixa de abrir na hora). */
+export async function revokeReportLink(inspectionId: string): Promise<ActionResult> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("revoke_report_link", { p_inspection_id: inspectionId });
+  if (error) return { ok: false, error: friendlyError(error, "Não foi possível revogar o link.") };
+  revalidatePath(`/inspecoes/${inspectionId}`);
   return { ok: true };
 }

@@ -42,3 +42,23 @@ export const loadInspection = cache(async (id: string) => {
     photos: photos.map<InspectionPhoto>((p) => ({ ...p, url: urls.get(p.storage_path) ?? null })),
   };
 });
+
+/** Catálogo ativo do checklist e mecânicos ativos, para o editor. */
+export const loadEditorContext = cache(async () => {
+  const supabase = await createClient();
+  const [catalogRes, mechanicsRes] = await Promise.all([
+    supabase.from("checklist_items").select("key, label, group_name, position").eq("active", true).order("position"),
+    supabase.from("profiles").select("id, full_name").eq("active", true).eq("role", "mechanic").order("full_name"),
+  ]);
+  return {
+    catalog: (catalogRes.data ?? []).map((c) => ({
+      item_key: c.key,
+      item_label: c.label,
+      group_name: c.group_name,
+      position: c.position,
+      status: null,
+      notes: null,
+    })),
+    mechanics: mechanicsRes.data ?? [],
+  };
+});

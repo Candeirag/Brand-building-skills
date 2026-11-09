@@ -31,6 +31,7 @@ A arquitetura, o modelo de dados, as medidas de segurança e LGPD e a direção 
 | **Finalização** | Valida pendências, gera número único (`CP2026-000124`), registra data/hora/responsável e torna a inspeção imutável |
 | **Histórico** | Busca por placa, proprietário ou número, filtro por período e situação, paginação, fotos ampliáveis, histórico por veículo |
 | **Mapa de avarias** | Silhueta do carro vista de cima com cada zona no estado do checklist: atualiza ao vivo no editor e aparece na inspeção finalizada e no PDF |
+| **Laudo para o cliente** | Link público `/laudo/[token]` (30 dias, revogável, fora dos buscadores) com veículo, km, combustível, checklist, avarias e fotos; botão "Enviar laudo no WhatsApp" com mensagem pronta, "Copiar link" e registro de quem enviou e quando |
 | **Relatório PDF** | Identidade visual Campeças, veículo, proprietário (documento mascarado), km, data, checklist, mapa e descrição das avarias, fotos, responsáveis e campos de assinatura |
 | **Equipe (admin)** | Cadastrar funcionários, definir função, desativar/reativar acesso (bloqueia o login na hora), redefinir senha, anonimizar dados de clientes (LGPD) |
 | **Minha conta** | Cada funcionário troca a própria senha (ex.: a provisória do primeiro acesso) |
@@ -65,6 +66,7 @@ do banco que só administradores executam.
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave pública (*anon* ou *publishable*) |
+| `REPORT_SERVER_KEY` | Chave do servidor para o laudo público. Pegue no banco: `select value from private.app_secrets where name = 'report_server_key';` (somente no servidor) |
 
 ### 3. Executar
 

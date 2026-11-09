@@ -5,13 +5,12 @@ import { AlertTriangle, Ban, Check, CheckCheck, EyeOff, MessageSquarePlus } from
 import {
   CHECKLIST_STATUS,
   CHECKLIST_STATUS_ORDER,
-  FUEL_LEVELS,
   checklistProgress,
   groupItems,
   type ChecklistItemState,
   type ChecklistStatus,
-  type FuelLevel,
 } from "@/lib/checklist";
+import { plural } from "@/lib/plural";
 import { DamageMap } from "./damage-map";
 import { SectionCard } from "./fields";
 import { CaptureButton, PendingTile, PhotoTile } from "./photo-widgets";
@@ -39,23 +38,18 @@ export function ChecklistSection({
   items,
   setStatus,
   setNotes,
-  markRemainingOk,
-  fuelLevel,
-  setFuelLevel,
+  markSectionOk,
   photoHandlers,
 }: {
   items: ItemsState;
   setStatus: (key: string, status: ChecklistStatus) => void;
   setNotes: (key: string, notes: string) => void;
-  markRemainingOk: () => void;
-  fuelLevel: FuelLevel | null;
-  setFuelLevel: (v: FuelLevel) => void;
+  markSectionOk: (groupName: string) => void;
   photoHandlers: PhotoHandlers;
 }) {
   const list = Object.values(items);
   const progress = checklistProgress(list);
   const groups = groupItems(list);
-  const pendingCount = progress.total - progress.answered;
   const statusByKey = Object.fromEntries(list.map((i) => [i.item_key, i.status]));
   const damagedLabels = list.filter((i) => i.status === "damaged").map((i) => i.item_label);
 
@@ -83,7 +77,7 @@ export function ChecklistSection({
             {damagedLabels.length ? (
               <>
                 <span className="font-medium text-accent-ink">
-                  {damagedLabels.length} avaria{damagedLabels.length > 1 ? "s" : ""}:
+                  {plural(damagedLabels.length, "avaria", "avarias")}:
                 </span>{" "}
                 <span className="text-ink">{damagedLabels.join(", ")}</span>
               </>
@@ -93,25 +87,30 @@ export function ChecklistSection({
           </p>
           {progress.damagedWithoutNotes > 0 && (
             <p className="mt-1 text-sm text-accent-ink">
-              Falta descrever {progress.damagedWithoutNotes} avaria{progress.damagedWithoutNotes > 1 ? "s" : ""}.
+              Falta descrever {plural(progress.damagedWithoutNotes, "avaria", "avarias")}.
             </p>
-          )}
-          {pendingCount > 0 && (
-            <button
-              type="button"
-              onClick={markRemainingOk}
-              className="mt-auto inline-flex h-11 items-center justify-center gap-1.5 self-start rounded-control border border-control bg-surface px-3 text-sm font-medium hover:border-faint sm:h-9"
-            >
-              <CheckCheck size={16} /> Marcar os {pendingCount} pendentes como Normal
-            </button>
           )}
         </div>
       </div>
 
       <div className="space-y-6">
-        {groups.map((group) => (
+        {groups.map((group) => {
+          const unanswered = group.items.filter((i) => i.status === null).length;
+          return (
           <div key={group.name}>
-            <h3 className="mb-2 text-xs text-muted">{group.name}</h3>
+            <div className="mb-2 flex min-h-9 items-center justify-between gap-3">
+              <h3 className="text-xs text-muted">{group.name}</h3>
+              {unanswered > 0 && (
+                <button
+                  type="button"
+                  onClick={() => markSectionOk(group.name)}
+                  className="inline-flex h-9 flex-none items-center gap-1.5 rounded-control border border-control bg-surface px-3 text-xs font-medium hover:border-faint"
+                  aria-label={`Marcar ${plural(unanswered, "item sem resposta", "itens sem resposta")} de ${group.name} como Normal`}
+                >
+                  <CheckCheck size={14} /> Marcar seção como Normal
+                </button>
+              )}
+            </div>
             <ul className="space-y-2">
               {group.items.map((item) => (
                 <ChecklistRow
@@ -119,8 +118,6 @@ export function ChecklistSection({
                   item={item}
                   setStatus={setStatus}
                   setNotes={setNotes}
-                  fuelLevel={item.item_key === "fuel" ? fuelLevel : undefined}
-                  setFuelLevel={item.item_key === "fuel" ? setFuelLevel : undefined}
                   photos={photoHandlers.photos.filter((p) => p.item_key === item.item_key)}
                   pending={photoHandlers.pending.filter((p) => p.item_key === item.item_key)}
                   handlers={photoHandlers}
@@ -128,7 +125,8 @@ export function ChecklistSection({
               ))}
             </ul>
           </div>
-        ))}
+          );
+        })}
       </div>
     </SectionCard>
   );
@@ -138,8 +136,6 @@ const ChecklistRow = memo(function ChecklistRow({
   item,
   setStatus,
   setNotes,
-  fuelLevel,
-  setFuelLevel,
   photos,
   pending,
   handlers,
@@ -147,8 +143,6 @@ const ChecklistRow = memo(function ChecklistRow({
   item: ChecklistItemState;
   setStatus: (key: string, status: ChecklistStatus) => void;
   setNotes: (key: string, notes: string) => void;
-  fuelLevel?: FuelLevel | null;
-  setFuelLevel?: (v: FuelLevel) => void;
   photos: PhotoView[];
   pending: PendingUpload[];
   handlers: PhotoHandlers;
@@ -201,36 +195,6 @@ const ChecklistRow = memo(function ChecklistRow({
           );
         })}
       </div>
-
-      {setFuelLevel && (
-        <div className="mt-3">
-          <p className="mb-1.5 text-sm font-medium">Nível de combustível</p>
-          <div role="radiogroup" aria-label="Nível de combustível" className="grid grid-cols-5 gap-1.5">
-            {FUEL_LEVELS.map((f) => {
-              const selected = fuelLevel === f.value;
-              return (
-                <button
-                  key={f.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setFuelLevel(f.value)}
-                  className={`relative h-11 overflow-hidden rounded-control border text-sm sm:h-10 ${
-                    selected ? "border-ink font-medium text-ink" : "border-control bg-surface text-muted"
-                  }`}
-                >
-                  <span
-                    className={`absolute inset-y-0 left-0 ${selected ? "bg-control" : "bg-raised"}`}
-                    style={{ width: `${f.fraction * 100}%` }}
-                    aria-hidden="true"
-                  />
-                  <span className="relative">{f.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {(damaged || showNotes) && (
         <div className="mt-3">

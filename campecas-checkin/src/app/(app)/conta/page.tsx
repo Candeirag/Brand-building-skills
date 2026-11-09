@@ -9,6 +9,12 @@ export default async function AccountPage() {
   const profile = await requireStaff();
   return (
     <main className="mx-auto max-w-[1280px] px-4 pt-5 lg:px-8 lg:pt-8">
+      {profile.must_change_password && (
+        <div role="status" className="mb-5 rounded-card border border-warning-border bg-warning-bg px-4 py-3 text-sm text-warning-ink">
+          <strong className="font-medium">Defina a sua senha para continuar.</strong> Você entrou com uma senha provisória
+          criada pelo administrador. Depois de trocar, o sistema abre normalmente.
+        </div>
+      )}
       <h1 className="h1">Minha conta</h1>
       <p className="mt-1 mb-8 text-[15px] text-muted">
         {profile.full_name} · {ROLE_LABELS[profile.role]} · {profile.email}

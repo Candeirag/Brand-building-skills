@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
-import { createInspection } from "./inspecoes/actions";
+import { NewInspectionButton } from "@/components/inspection/new-inspection-button";
 import { PlateSearch } from "@/components/dashboard/plate-search";
 import { InspectionRow, InspectionTableHeader } from "@/components/inspection/inspection-row";
 import { buttonClass } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { formatDate, formatNumber, isoDateInSaoPaulo, startOfDaySaoPaulo } from 
 import { INSPECTION_ROW_SELECT, toRowData, type InspectionRowData } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 import { elapsed } from "@/lib/time";
-import { formatPlate } from "@/lib/format";
+import { plural } from "@/lib/plural";
 
 /*
  * Pergunta da tela: "Quais carros do pátio estão com inspeção aberta, e o que entrou hoje?"
@@ -29,9 +28,10 @@ export default async function DashboardPage() {
   const monthStart = startOfDaySaoPaulo(`${today.slice(0, 7)}-01`);
 
   const [todayRes, olderDraftsRes, openRes, monthRes, vehiclesRes] = await Promise.all([
-    supabase.from("inspections").select(INSPECTION_ROW_SELECT).gte("started_at", todayStart).order("started_at", { ascending: false }).limit(100),
-    supabase.from("inspections").select(INSPECTION_ROW_SELECT).eq("status", "draft").lt("started_at", todayStart).order("started_at").limit(LIST_LIMIT),
-    supabase.from("inspections").select("id", { count: "exact", head: true }).eq("status", "draft"),
+    // Rascunhos vazios (is_blank) não contam: ficam fora das listas e das contagens.
+    supabase.from("inspections").select(INSPECTION_ROW_SELECT).eq("is_blank", false).gte("started_at", todayStart).order("started_at", { ascending: false }).limit(100),
+    supabase.from("inspections").select(INSPECTION_ROW_SELECT).eq("status", "draft").eq("is_blank", false).lt("started_at", todayStart).order("started_at").limit(LIST_LIMIT),
+    supabase.from("inspections").select("id", { count: "exact", head: true }).eq("status", "draft").eq("is_blank", false),
     supabase.from("inspections").select("id", { count: "exact", head: true }).eq("status", "finalized").gte("finalized_at", monthStart),
     supabase.from("vehicles").select("id, plate, brand, model, last_mileage, updated_at").order("updated_at", { ascending: false }).limit(5),
   ]);
@@ -52,11 +52,12 @@ export default async function DashboardPage() {
   const hidden = drafts.length + finalizedToday.length - yard.length;
 
   const oldest = drafts[0];
-  const finding = oldest
-    ? `A inspeção ${oldest.plate ? `de ${formatPlate(oldest.plate)} ` : ""}está aberta ${elapsed(oldest.started_at, now)}.`
-    : todayRows.length
-      ? `Nenhuma inspeção aberta. ${todayRows.length} entrada${todayRows.length > 1 ? "s" : ""} hoje, todas finalizadas.`
-      : "Nenhuma entrada registrada hoje.";
+  const finding =
+    openTotal > 0 && oldest
+      ? openTotal === 1
+        ? `1 em andamento · aberta ${elapsed(oldest.started_at, now)}`
+        : `${openTotal} em andamento · mais antiga ${elapsed(oldest.started_at, now)}`
+      : "Nenhuma inspeção aberta";
 
   const kpis = [
     { label: "Entradas hoje", value: todayRows.length, caption: "desde 00:00" },
@@ -64,7 +65,7 @@ export default async function DashboardPage() {
     {
       label: "Com avarias",
       value: todayWithDamage,
-      caption: todayRows.length ? `de ${todayRows.length} entrada${todayRows.length > 1 ? "s" : ""} de hoje` : "nenhuma entrada hoje",
+      caption: todayRows.length ? `de ${plural(todayRows.length, "entrada", "entradas")} de hoje` : "nenhuma entrada hoje",
     },
     { label: "Finalizadas no mês", value: monthRes.count ?? 0, caption: "desde o dia 1º" },
   ];
@@ -79,11 +80,9 @@ export default async function DashboardPage() {
             {finding}
           </p>
         </div>
-        <form action={createInspection} className="flex-none">
-          <button type="submit" className={buttonClass("primary", "lg", "w-full sm:h-10 sm:w-auto")}>
-            <Plus size={18} strokeWidth={2.25} /> Nova inspeção
-          </button>
-        </form>
+        <div className="flex-none">
+          <NewInspectionButton />
+        </div>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_384px]">

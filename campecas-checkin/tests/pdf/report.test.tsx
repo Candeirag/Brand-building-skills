@@ -53,6 +53,8 @@ const inspection: Tables<"inspections"> = {
   updated_at: "2026-11-09T12:31:00Z",
   finalized_at: "2026-11-09T12:31:00Z",
   finalized_by: "00000000-0000-0000-0000-00000000000b",
+  is_blank: false,
+  service_request: "Revisão dos freios e ruído na suspensão dianteira.",
 };
 
 const items: Tables<"inspection_items">[] = LABELS.map(([key, label, group], idx) => ({
@@ -89,6 +91,8 @@ describe("relatório PDF", () => {
       items,
       photos,
       generatedAt: new Date("2026-11-09T12:35:00Z"),
+      maskedDocument: "***.982.247-**",
+      contactPhone: "11987654321",
     }) as unknown as ReactElement<DocumentProps>;
     const pdf = await renderToBuffer(element);
 

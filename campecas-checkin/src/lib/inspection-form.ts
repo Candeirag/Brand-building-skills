@@ -1,4 +1,5 @@
 import type { FuelLevel } from "./checklist";
+import { plural } from "./plural";
 import { formatDocument, formatNumber, formatPhone } from "./format";
 import type { Tables, TablesUpdate } from "./supabase/database.types";
 import {
@@ -28,6 +29,7 @@ export type InspectionForm = {
   mechanic_name: string;
   mechanic_id: string | null;
   notes: string;
+  service_request: string;
   checklist_confirmed: boolean;
 };
 
@@ -51,7 +53,32 @@ export function formFromInspection(row: Tables<"inspections">): InspectionForm {
     mechanic_name: row.mechanic_name ?? "",
     mechanic_id: row.mechanic_id,
     notes: row.notes ?? "",
+    service_request: row.service_request ?? "",
     checklist_confirmed: row.checklist_confirmed,
+  };
+}
+
+/** Formulário de uma inspeção nova (ainda não gravada no banco). */
+export function emptyForm(inspectorName: string, plate = ""): InspectionForm {
+  return {
+    plate,
+    brand: "",
+    model: "",
+    year: "",
+    color: "",
+    mileage: "",
+    fuel_level: null,
+    owner_name: "",
+    owner_document: "",
+    owner_phone: "",
+    owner_whatsapp: "",
+    customer_id: null,
+    inspector_name: inspectorName,
+    mechanic_name: "",
+    mechanic_id: null,
+    notes: "",
+    service_request: "",
+    checklist_confirmed: false,
   };
 }
 
@@ -136,6 +163,9 @@ export function toInspectionPatch(form: InspectionForm, fields: Iterable<FormFie
       case "notes":
         patch.notes = text(form.notes, 5000);
         break;
+      case "service_request":
+        patch.service_request = text(form.service_request, 2000);
+        break;
       case "checklist_confirmed":
         patch.checklist_confirmed = form.checklist_confirmed;
         break;
@@ -169,14 +199,23 @@ export function ownerSectionComplete(form: InspectionForm): boolean {
     (isValidPhone(form.owner_phone) || isValidPhone(form.owner_whatsapp)) &&
     !e.owner_document &&
     !e.owner_phone &&
-    !e.owner_whatsapp
+    !e.owner_whatsapp &&
+    form.service_request.trim().length > 0
   );
 }
+
+export type PhotoRequirementInput = {
+  hasFront: boolean;
+  hasDashboard: boolean;
+  /** Rótulos dos itens avariados que ainda não têm foto. */
+  damagedWithoutPhoto: string[];
+};
 
 /** Pendências que impedem a finalização (espelha finalize_inspection no banco). */
 export function finalizationIssues(
   form: InspectionForm,
   checklist: { answered: number; total: number; damagedWithoutNotes: number },
+  photos: PhotoRequirementInput = { hasFront: true, hasDashboard: true, damagedWithoutPhoto: [] },
 ): string[] {
   const issues: string[] = [];
   if (!isValidPlate(form.plate)) issues.push("Informe a placa");
@@ -186,9 +225,14 @@ export function finalizationIssues(
   if (form.owner_name.trim().length < 2) issues.push("Informe o nome do proprietário");
   if (!isValidPhone(form.owner_phone) && !isValidPhone(form.owner_whatsapp))
     issues.push("Informe um telefone ou WhatsApp válido");
+  if (!form.service_request.trim()) issues.push("Descreva o serviço solicitado pelo cliente");
   if (checklist.answered < checklist.total)
-    issues.push(`Responda ${checklist.total - checklist.answered} item(ns) do checklist`);
-  if (checklist.damagedWithoutNotes > 0) issues.push(`Descreva ${checklist.damagedWithoutNotes} avaria(s)`);
+    issues.push(`Responda ${plural(checklist.total - checklist.answered, "item do checklist", "itens do checklist")}`);
+  if (checklist.damagedWithoutNotes > 0)
+    issues.push(`Descreva ${plural(checklist.damagedWithoutNotes, "avaria", "avarias")}`);
+  if (!photos.hasFront) issues.push("Fotografe a frente do veículo");
+  if (!photos.hasDashboard) issues.push("Fotografe o painel com a quilometragem");
+  for (const label of photos.damagedWithoutPhoto) issues.push(`Fotografe a avaria: ${label}`);
   if (!form.inspector_name.trim()) issues.push("Informe o funcionário responsável");
   if (!form.mechanic_name.trim()) issues.push("Informe o mecânico responsável");
   if (!form.checklist_confirmed) issues.push("Confirme que o checklist foi concluído");
