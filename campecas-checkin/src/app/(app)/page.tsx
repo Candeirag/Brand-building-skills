@@ -1,154 +1,182 @@
 import Link from "next/link";
-import { CarFront, CheckCircle2, ClipboardList, Clock3, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { createInspection } from "./inspecoes/actions";
 import { PlateSearch } from "@/components/dashboard/plate-search";
-import { InspectionRow } from "@/components/inspection/inspection-row";
+import { InspectionRow, InspectionTableHeader } from "@/components/inspection/inspection-row";
 import { buttonClass } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Plate } from "@/components/ui/plate";
 import { requireStaff } from "@/lib/auth";
-import { formatDate, formatKm, isoDateInSaoPaulo, startOfDaySaoPaulo } from "@/lib/format";
-import { INSPECTION_LIST_COLUMNS, type InspectionListItem } from "@/lib/queries";
+import { formatDate, formatNumber, isoDateInSaoPaulo, startOfDaySaoPaulo } from "@/lib/format";
+import { INSPECTION_ROW_SELECT, toRowData, type InspectionRowData } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
+import { elapsed } from "@/lib/time";
+import { formatPlate } from "@/lib/format";
+
+/*
+ * Pergunta da tela: "Quais carros do pátio estão com inspeção aberta, e o que entrou hoje?"
+ * Maior bloco: a lista "No pátio". Grid desktop: 1fr + coluna de 384 px, vão de 24 px.
+ * Na área de 1136 px (1440 - 240 - 2x32): 728 + 24 + 384 = 1136.
+ */
+const LIST_LIMIT = 8;
 
 export default async function DashboardPage() {
-  const profile = await requireStaff();
+  await requireStaff();
   const supabase = await createClient();
-  const todayStart = startOfDaySaoPaulo(isoDateInSaoPaulo());
+  const now = new Date();
+  const today = isoDateInSaoPaulo(now);
+  const todayStart = startOfDaySaoPaulo(today);
+  const monthStart = startOfDaySaoPaulo(`${today.slice(0, 7)}-01`);
 
-  const [today, drafts, finalized, recent, inProgress, vehicles] = await Promise.all([
-    supabase.from("inspections").select("id", { count: "exact", head: true }).gte("started_at", todayStart),
+  const [todayRes, olderDraftsRes, openRes, monthRes, vehiclesRes] = await Promise.all([
+    supabase.from("inspections").select(INSPECTION_ROW_SELECT).gte("started_at", todayStart).order("started_at", { ascending: false }).limit(100),
+    supabase.from("inspections").select(INSPECTION_ROW_SELECT).eq("status", "draft").lt("started_at", todayStart).order("started_at").limit(LIST_LIMIT),
     supabase.from("inspections").select("id", { count: "exact", head: true }).eq("status", "draft"),
-    supabase.from("inspections").select("id", { count: "exact", head: true }).eq("status", "finalized"),
-    supabase
-      .from("inspections")
-      .select(INSPECTION_LIST_COLUMNS)
-      .eq("status", "finalized")
-      .order("finalized_at", { ascending: false })
-      .limit(8),
-    supabase
-      .from("inspections")
-      .select(INSPECTION_LIST_COLUMNS)
-      .eq("status", "draft")
-      .order("updated_at", { ascending: false })
-      .limit(5),
-    supabase
-      .from("vehicles")
-      .select("id, plate, brand, model, last_mileage, updated_at")
-      .order("updated_at", { ascending: false })
-      .limit(6),
+    supabase.from("inspections").select("id", { count: "exact", head: true }).eq("status", "finalized").gte("finalized_at", monthStart),
+    supabase.from("vehicles").select("id, plate, brand, model, last_mileage, updated_at").order("updated_at", { ascending: false }).limit(5),
   ]);
 
-  const firstName = profile.full_name.split(" ")[0];
-  const stats = [
-    { label: "Realizadas hoje", value: today.count ?? 0, icon: Clock3, href: "/historico?periodo=hoje" },
-    { label: "Em andamento", value: drafts.count ?? 0, icon: ClipboardList, href: "/inspecoes/em-andamento" },
-    { label: "Finalizadas", value: finalized.count ?? 0, icon: CheckCircle2, href: "/historico?status=finalized" },
+  // Um fato, uma variável: tudo que fala de "hoje" sai destas linhas.
+  const todayRows = (todayRes.data ?? []).map(toRowData);
+  const olderDrafts = (olderDraftsRes.data ?? []).map(toRowData);
+  const todayWithDamage = todayRows.filter((r) => r.damages > 0).length;
+  const openTotal = openRes.count ?? 0;
+
+  const drafts = [...olderDrafts, ...todayRows.filter((r) => r.status === "draft")].sort(
+    (a, b) => +new Date(a.started_at) - +new Date(b.started_at),
+  );
+  const finalizedToday = todayRows
+    .filter((r) => r.status === "finalized")
+    .sort((a, b) => +new Date(b.finalized_at!) - +new Date(a.finalized_at!));
+  const yard: InspectionRowData[] = [...drafts, ...finalizedToday].slice(0, LIST_LIMIT);
+  const hidden = drafts.length + finalizedToday.length - yard.length;
+
+  const oldest = drafts[0];
+  const finding = oldest
+    ? `A inspeção ${oldest.plate ? `de ${formatPlate(oldest.plate)} ` : ""}está aberta ${elapsed(oldest.started_at, now)}.`
+    : todayRows.length
+      ? `Nenhuma inspeção aberta. ${todayRows.length} entrada${todayRows.length > 1 ? "s" : ""} hoje, todas finalizadas.`
+      : "Nenhuma entrada registrada hoje.";
+
+  const kpis = [
+    { label: "Entradas hoje", value: todayRows.length, caption: "desde 00:00" },
+    { label: "Em andamento", value: openTotal, caption: "todas as datas", alert: openTotal > 0 },
+    {
+      label: "Com avarias",
+      value: todayWithDamage,
+      caption: todayRows.length ? `de ${todayRows.length} entrada${todayRows.length > 1 ? "s" : ""} de hoje` : "nenhuma entrada hoje",
+    },
+    { label: "Finalizadas no mês", value: monthRes.count ?? 0, caption: "desde o dia 1º" },
   ];
 
   return (
-    <main>
-      {/* Faixa de destaque */}
-      <section className="relative overflow-hidden bg-ink pb-24 text-white">
-        <div className="racing-stripe absolute top-0 right-0 h-full w-40 opacity-20 sm:w-72" aria-hidden="true" />
-        <div className="relative mx-auto max-w-6xl px-4 pt-6 sm:px-6 sm:pt-10">
-          <p className="text-white/60">Olá, {firstName}</p>
-          <h1 className="display mt-1 text-3xl font-extrabold sm:text-4xl">Inspeção de entrada</h1>
-          <form action={createInspection} className="mt-6 sm:max-w-md">
-            <button type="submit" className={buttonClass("primary", "xl", "w-full shadow-lg shadow-brand-red/30")}>
-              <Plus size={26} strokeWidth={2.5} />
-              Nova inspeção
-            </button>
-          </form>
+    <main className="mx-auto max-w-[1280px] px-4 pt-5 lg:px-8 lg:pt-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="h1">No pátio hoje</h1>
+          <p className={`mt-1 text-[15px] ${oldest ? "text-ink" : "text-muted"}`}>
+            {oldest && <span className="mr-2 inline-block h-2 w-2 rounded-full bg-accent align-middle" aria-hidden="true" />}
+            {finding}
+          </p>
         </div>
-      </section>
+        <form action={createInspection} className="flex-none">
+          <button type="submit" className={buttonClass("primary", "lg", "w-full sm:h-10 sm:w-auto")}>
+            <Plus size={18} strokeWidth={2.25} /> Nova inspeção
+          </button>
+        </form>
+      </div>
 
-      <div className="relative mx-auto -mt-16 max-w-6xl space-y-6 px-4 sm:px-6">
-        <div className="card p-3 sm:p-4">
-          <PlateSearch />
-        </div>
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_384px]">
+        <div className="min-w-0 space-y-6">
+          <section aria-label="Indicadores" className="panel grid grid-cols-2 md:grid-cols-4">
+            {kpis.map((k, i) => (
+              <div
+                key={k.label}
+                className={`px-4 py-3.5 md:px-5 ${i % 2 ? "border-l border-border" : ""} ${i >= 2 ? "border-t border-border md:border-t-0" : ""} ${i === 2 ? "md:border-l" : ""}`}
+              >
+                <p className="text-sm text-muted">{k.label}</p>
+                <p className={`num mt-1 text-2xl leading-8 font-medium ${k.alert ? "text-accent-ink" : "text-ink"}`}>{k.value}</p>
+                <p className="text-xs text-muted">{k.caption}</p>
+              </div>
+            ))}
+          </section>
 
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          {stats.map(({ label, value, icon: Icon, href }) => (
-            <Link key={label} href={href} className="card group p-3.5 transition hover:border-graphite/30 sm:p-5">
-              <Icon size={20} className="text-brand-red" />
-              <p className="display mt-2 text-3xl font-extrabold sm:text-4xl">{value}</p>
-              <p className="text-xs leading-tight font-medium text-steel sm:text-sm">{label}</p>
-            </Link>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.5fr_1fr]">
-          <div className="space-y-6">
-            {(inProgress.data?.length ?? 0) > 0 && (
-              <section className="card overflow-hidden">
-                <header className="flex items-center justify-between border-b border-line px-4 py-3 sm:px-5">
-                  <h2 className="display text-lg font-bold">Em andamento</h2>
-                  <Link href="/inspecoes/em-andamento" className="text-sm font-semibold text-brand-red">
-                    Ver todas
-                  </Link>
-                </header>
-                <ul className="divide-y divide-line">
-                  {(inProgress.data as InspectionListItem[]).map((item) => (
-                    <InspectionRow key={item.id} item={item} />
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            <section className="card overflow-hidden">
-              <header className="flex items-center justify-between border-b border-line px-4 py-3 sm:px-5">
-                <h2 className="display text-lg font-bold">Últimas inspeções</h2>
-                <Link href="/historico" className="text-sm font-semibold text-brand-red">
-                  Histórico completo
-                </Link>
-              </header>
-              {recent.data?.length ? (
-                <ul className="divide-y divide-line">
-                  {(recent.data as InspectionListItem[]).map((item) => (
-                    <InspectionRow key={item.id} item={item} />
-                  ))}
-                </ul>
-              ) : (
-                <EmptyState icon={<ClipboardList size={36} />} title="Nenhuma inspeção finalizada ainda">
-                  Toque em <strong>Nova inspeção</strong> para registrar o primeiro veículo.
-                </EmptyState>
-              )}
-            </section>
-          </div>
-
-          <section className="card self-start overflow-hidden">
-            <header className="border-b border-line px-4 py-3 sm:px-5">
-              <h2 className="display text-lg font-bold">Histórico de veículos</h2>
+          <section className="panel overflow-hidden" aria-labelledby="patio">
+            <header className="flex items-center justify-between gap-3 px-4 py-3.5">
+              <div>
+                <h2 id="patio" className="h2">No pátio</h2>
+                <p className="text-xs text-muted">
+                  Abertas primeiro (da mais antiga), depois as finalizadas hoje
+                </p>
+              </div>
+              <Link href="/historico?periodo=hoje" className="flex-none text-sm font-medium text-ink hover:underline">
+                Ver todas
+              </Link>
             </header>
-            {vehicles.data?.length ? (
-              <ul className="divide-y divide-line">
-                {vehicles.data.map((v) => (
-                  <li key={v.id}>
-                    <Link
-                      href={`/veiculos/${v.plate}`}
-                      className="flex items-center gap-3 px-4 py-3 transition hover:bg-paper sm:px-5"
-                    >
-                      <Plate value={v.plate} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">
-                          {[v.brand, v.model].filter(Boolean).join(" ") || "—"}
-                        </p>
-                        <p className="text-xs text-steel">
-                          {formatKm(v.last_mileage)} · {formatDate(v.updated_at)}
-                        </p>
-                      </div>
+            {yard.length ? (
+              <>
+                <InspectionTableHeader />
+                <ul className="border-t border-rule">
+                  {yard.map((item) => (
+                    <InspectionRow key={item.id} item={item} now={now} />
+                  ))}
+                </ul>
+                {hidden > 0 && (
+                  <p className="border-t border-rule px-4 py-2.5 text-sm text-muted">
+                    Mais {hidden} no{" "}
+                    <Link href="/historico?periodo=hoje" className="font-medium text-ink hover:underline">
+                      histórico de hoje
                     </Link>
-                  </li>
-                ))}
-              </ul>
+                  </p>
+                )}
+              </>
             ) : (
-              <EmptyState icon={<CarFront size={36} />} title="Nenhum veículo cadastrado">
-                Os veículos são cadastrados automaticamente ao finalizar uma inspeção.
-              </EmptyState>
+              <EmptyState title="Nenhum veículo no pátio hoje.">Toque em Nova inspeção quando o próximo carro chegar.</EmptyState>
             )}
           </section>
         </div>
+
+        <aside className="min-w-0 space-y-4">
+          <section>
+            <h2 className="h2 mb-2">Buscar inspeção</h2>
+            <div className="panel p-3">
+              <PlateSearch />
+            </div>
+          </section>
+          <section>
+            <h2 className="h2 mb-2">Veículos atendidos recentemente</h2>
+            <div className="panel overflow-hidden">
+              {vehiclesRes.data?.length ? (
+                <ul>
+                  {vehiclesRes.data.map((v) => (
+                    <li key={v.id} className="border-t border-rule first:border-t-0">
+                      <Link href={`/veiculos/${v.plate}`} className="flex h-14 items-center gap-3 px-4 hover:bg-raised">
+                        <Plate value={v.plate} size="sm" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium">
+                            {[v.brand, v.model].filter(Boolean).join(" ") || "–"}
+                          </span>
+                          <span className="block text-xs text-muted">{formatDate(v.updated_at)}</span>
+                        </span>
+                        <span className="num text-right text-sm">
+                          {v.last_mileage != null ? formatNumber(v.last_mileage) : "–"}
+                          <span className="text-muted"> km</span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState title="Nenhum veículo cadastrado.">Os veículos entram aqui ao finalizar a primeira inspeção.</EmptyState>
+              )}
+              <div className="border-t border-rule p-3">
+                <Link href="/historico" className={buttonClass("outline", "sm", "w-full")}>
+                  Ver histórico completo
+                </Link>
+              </div>
+            </div>
+          </section>
+        </aside>
       </div>
     </main>
   );

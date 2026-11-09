@@ -11,3 +11,6 @@ next-env.d.ts
 supabase/.branches
 supabase/.temp
 .DS_Store
+
+# Arquivos de trabalho da skill de direção de arte
+.taste-skill/

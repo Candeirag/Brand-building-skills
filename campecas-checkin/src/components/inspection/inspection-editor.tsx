@@ -259,7 +259,7 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
       setPending((prev) => prev.map((p) => (p.tempId === upload.tempId ? { ...p, error: undefined } : p)));
       try {
         const plate = formatPlate(formRef.current.plate);
-        const stamp = `CAMPEÇAS · ${plate === "—" ? "SEM PLACA" : plate} · ${formatDateTime(new Date())}`;
+        const stamp = `CAMPEÇAS · ${plate === "–" ? "SEM PLACA" : plate} · ${formatDateTime(new Date())}`;
         const { blob, width, height } = await compressImage(upload.file, stamp);
         const path = `${inspectionId}/${upload.category}/${crypto.randomUUID()}.jpg`;
 
@@ -435,10 +435,10 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
   const sections = [
     { id: "veiculo", label: "Veículo", done: vehicleSectionComplete(form) },
     { id: "proprietario", label: "Cliente", done: ownerSectionComplete(form) },
-    { id: "checklist", label: `Checklist ${progress.answered}/${progress.total}`, done: progress.complete },
+    { id: "checklist", label: "Checklist", done: progress.complete },
     {
       id: "fotos",
-      label: `Fotos ${photos.length}`,
+      label: "Fotos",
       done: PHOTO_CATEGORIES.filter((c) => c.recommended).every((c) => photos.some((p) => p.category === c.value)),
     },
     { id: "finalizacao", label: "Finalizar", done: issues.length === 0 },
@@ -449,29 +449,33 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
   return (
     <div>
       {/* Barra da inspeção */}
-      <div className="sticky top-[calc(67px+env(safe-area-inset-top))] z-20 bg-graphite text-white shadow-md">
-        <div className="mx-auto flex h-12 max-w-3xl items-center gap-3 px-3 sm:px-6">
-          <Link href="/" className="-ml-1 rounded-lg p-2 hover:bg-white/10" aria-label="Voltar ao painel">
-            <ArrowLeft size={22} />
+      <div className="sticky top-0 z-20 border-b border-border bg-ground pt-[env(safe-area-inset-top)] lg:pt-0">
+        <div className="mx-auto flex h-12 max-w-3xl items-center gap-2 pr-4 pl-1 sm:px-6">
+          <Link href="/" className="flex h-11 w-11 flex-none items-center justify-center rounded-control hover:bg-raised" aria-label="Voltar ao painel">
+            <ArrowLeft size={20} />
           </Link>
-          <p className="min-w-0 flex-1 truncate font-semibold">
-            {isValidPlate(form.plate) ? formatPlate(form.plate) : "Nova inspeção"}
-            <span className="ml-2 text-sm font-normal text-white/50">rascunho</span>
-          </p>
+          <h1 className="min-w-0 flex-1 truncate text-base font-semibold">
+            {isValidPlate(form.plate) ? (
+              <span className="id-type">{formatPlate(form.plate)}</span>
+            ) : (
+              "Nova inspeção"
+            )}
+            <span className="ml-2 text-sm font-normal text-muted">rascunho</span>
+          </h1>
           <SaveIndicator state={saveState} />
         </div>
-        <nav className="mx-auto flex max-w-3xl gap-1.5 overflow-x-auto px-3 pb-2.5 sm:px-6" aria-label="Seções da inspeção">
+        <nav className="mx-auto grid max-w-3xl grid-cols-5 gap-1.5 px-4 pb-2.5 sm:px-6" aria-label="Seções da inspeção">
           {sections.map((s) => (
             <button
               key={s.id}
               type="button"
               onClick={() => scrollTo(s.id)}
-              className={`inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-3 text-xs font-semibold ${
-                s.done ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-white/80"
+              className={`inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-full border px-1.5 text-xs ${
+                s.done ? "border-positive/30 bg-positive-bg text-positive-ink" : "border-control bg-surface text-muted hover:text-ink"
               }`}
             >
-              {s.done && <Check size={13} strokeWidth={3} />}
-              {s.label}
+              {s.done && <Check size={12} strokeWidth={2.5} className="flex-none" />}
+              <span className="truncate">{s.label}</span>
             </button>
           ))}
         </nav>
@@ -479,16 +483,16 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
 
       {notice && (
         <div className="mx-auto mt-4 max-w-3xl px-4 sm:px-6">
-          <div role="status" className="flex items-start gap-3 rounded-xl bg-ink px-4 py-3 text-sm text-white">
+          <div role="status" className="flex items-start gap-3 rounded-card border border-border bg-surface px-4 py-3 text-sm">
             <span className="flex-1">{notice}</span>
-            <button type="button" onClick={() => setNotice(null)} aria-label="Fechar aviso">
-              <X size={18} />
+            <button type="button" onClick={() => setNotice(null)} aria-label="Fechar aviso" className="text-muted">
+              <X size={16} />
             </button>
           </div>
         </div>
       )}
 
-      <main className="mx-auto max-w-3xl space-y-5 px-4 py-5 sm:px-6 sm:py-8">
+      <main className="mx-auto max-w-3xl space-y-4 px-4 py-4 sm:px-6 sm:py-6">
         <VehicleSection
           form={form}
           update={update}
@@ -539,16 +543,23 @@ export function InspectionEditor({ inspection, initialItems, initialPhotos, mech
       </main>
 
       {/* Atalho para a finalização (celular) */}
-      <div className="no-print sticky bottom-0 z-20 border-t border-line bg-white/95 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] backdrop-blur sm:hidden">
+      <div className="no-print sticky bottom-0 z-20 flex items-center gap-3 border-t border-border bg-surface px-4 pt-2.5 pb-[max(env(safe-area-inset-bottom),0.625rem)] sm:hidden">
+        <p className="min-w-0 flex-1 text-sm">
+          {issues.length ? (
+            <>
+              <span className="num font-medium">{issues.length}</span>
+              <span className="text-muted"> pendência{issues.length > 1 ? "s" : ""} para finalizar</span>
+            </>
+          ) : (
+            <span className="font-medium text-positive">Pronta para finalizar</span>
+          )}
+        </p>
         <button
           type="button"
           onClick={() => scrollTo("finalizacao")}
-          className="flex h-13 w-full items-center justify-between rounded-xl bg-ink px-4 font-semibold text-white"
+          className="inline-flex h-11 flex-none items-center gap-1 rounded-control border border-control px-3.5 text-sm font-medium"
         >
-          <span>{issues.length ? `${issues.length} pendência(s)` : "Pronto para finalizar"}</span>
-          <span className="flex items-center gap-1 text-brand-red">
-            Finalizar <ChevronRight size={18} />
-          </span>
+          Finalização <ChevronRight size={16} />
         </button>
       </div>
 

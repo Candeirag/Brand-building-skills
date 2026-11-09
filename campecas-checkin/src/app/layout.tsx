@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed } from "next/font/google";
+import { Barlow } from "next/font/google";
 import "./globals.css";
 
 const barlow = Barlow({
@@ -8,11 +8,12 @@ const barlow = Barlow({
   variable: "--font-barlow",
   display: "swap",
 });
-const barlowCondensed = Barlow_Condensed({
+// Logotipo: a mesma família em 700 itálico (uma família só; a mono fica para placas e IDs).
+const barlowBrand = Barlow({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  style: ["normal", "italic"],
-  variable: "--font-barlow-condensed",
+  weight: "700",
+  style: "italic",
+  variable: "--font-barlow-brand",
   display: "swap",
 });
 
@@ -21,12 +22,12 @@ export const metadata: Metadata = {
   description: "Inspeção digital de entrada de veículos da oficina CAMPEÇAS.",
   applicationName: "CAMPEÇAS CHECK-IN",
   robots: { index: false, follow: false },
-  appleWebApp: { capable: true, title: "Check-in", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "Check-in", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0b0c",
+  themeColor: "#fbf8f8",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -34,7 +35,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${barlow.variable} ${barlowCondensed.variable}`}>
+    <html lang="pt-BR" className={`${barlow.variable} ${barlowBrand.variable}`}>
       <body className="min-h-dvh">{children}</body>
     </html>
   );

@@ -29,35 +29,44 @@ export function CustomerPrivacy({ query, customers, searched }: { query: string;
   return (
     <div className="space-y-3">
       <form method="get" className="flex gap-2">
-        <input name="cliente" defaultValue={query} placeholder="Nome, telefone ou CPF/CNPJ" className="field-input h-12 flex-1" />
-        <button type="submit" className={buttonClass("dark", "md", "h-12")}>
-          <Search size={18} /> Buscar
+        <div className="relative flex-1">
+          <Search size={16} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted" />
+          <input name="cliente" defaultValue={query} placeholder="Nome, telefone ou CPF/CNPJ" aria-label="Buscar cliente" className="field-input pl-9" />
+        </div>
+        <button type="submit" className={buttonClass("outline", "lg")}>
+          Buscar
         </button>
       </form>
       {message && (
-        <p className={`rounded-lg px-3 py-2 text-sm ${message.ok ? "bg-ok-soft text-ok" : "bg-brand-red-soft text-brand-red-dark"}`}>
+        <p
+          className={`rounded-control border px-3 py-2 text-sm ${
+            message.ok ? "border-positive/25 bg-positive-bg text-positive-ink" : "border-tint-2 bg-tint text-accent-ink"
+          }`}
+        >
           {message.text}
         </p>
       )}
       {searched &&
         (customers.length ? (
-          <ul className="divide-y divide-line rounded-xl border border-line">
+          <ul className="rounded-card border border-border">
             {customers.map((c) => (
-              <li key={c.id} className="flex items-center gap-3 px-4 py-3">
+              <li key={c.id} className="flex items-center gap-3 border-t border-rule px-4 py-2.5 first:border-t-0">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{c.full_name}</p>
-                  <p className="truncate text-xs text-steel">
-                    {[formatPhone(c.whatsapp ?? c.phone), c.document && maskDocument(c.document)].filter(Boolean).join(" · ")}
+                  <p className="truncate font-medium">{c.full_name}</p>
+                  <p className="truncate text-[13px] text-muted">
+                    {[formatPhone(c.whatsapp ?? c.phone), c.document && maskDocument(c.document)].filter(Boolean).join(" · ") || "Sem contato"}
                   </p>
                 </div>
-                <button type="button" disabled={pending} onClick={() => anonymize(c)} className={buttonClass("danger", "sm")}>
+                <button type="button" disabled={pending} onClick={() => anonymize(c)} className={buttonClass("danger", "md")}>
                   {busyId === c.id ? <LoaderCircle size={14} className="animate-spin" /> : <Eraser size={14} />} Anonimizar
                 </button>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-steel">Nenhum cliente encontrado.</p>
+          <p className="rounded-card border border-dashed border-control px-4 py-3 text-sm text-muted">
+            Nenhum cliente encontrado para “{query}”.
+          </p>
         ))}
     </div>
   );

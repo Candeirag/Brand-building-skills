@@ -97,6 +97,29 @@ Caminho no Storage: `{inspection_id}/{categoria}/{uuid}.jpg`.
   (somente os nomes dos campos) e anonimizações, sem armazenar dados pessoais.
 - **Retenção**: recomenda-se definir o prazo (ex.: 5 anos, prazo prescricional do CDC) e anonimizar após.
 
+## Direção de arte
+
+A interface segue a skill de direção de arte para telas de app (`references/app-screens.md`), estilo
+**accent ladder** (seed `1386293280`):
+
+- **Um matiz só, o vermelho Campeças (`#e10600`)**, cheio apenas em marcas pequenas: as avarias, o ícone da
+  navegação ativa e o único botão preenchido de cada tela. Os tons claros dele fazem o trabalho de área
+  (item ativo, avisos de avaria). O fundo (`#fbf8f8`) fica um degrau tingido em direção ao vermelho.
+- **Vermelho significa avaria.** Em todo lugar (tabelas, mapa, KPIs, PDF) a cor cheia aponta um dano ou uma
+  pendência; o que está normal fica em cinza.
+- **Elemento-assinatura: o mapa de avarias** (`src/lib/damage-map.ts`), o croqui da ficha de entrada em papel,
+  desenhado a partir do checklist. Mesma geometria na tela e no PDF.
+- **Estrutura "plano aberto"**: barra lateral clara de 240 px no desktop; no celular, barra superior de 48 px com o
+  nome da tela e barra inferior com os destinos (o editor usa a tela inteira).
+- **Superfícies chapadas**: borda de 1 px ou degrau de tom, sem sombra em repouso; raio 8/6/4; uma família
+  tipográfica (Barlow), com mono só para identificadores (placa, nº da inspeção).
+- **Cada tela responde a uma pergunta**, escrita como comentário no topo do arquivo da página (ex.: painel:
+  "Quais carros do pátio estão com inspeção aberta, e o que entrou hoje?").
+
+Checagem: `lint.mjs --app` sem achados e `inspect.mjs --app` sem FAIL em todas as telas, em 1440, 768 e 390 px.
+Os avisos restantes são defendidos: telas curtas com poucos dados de exemplo (`hero-void`) e o editor, que é um
+formulário sequencial com atalhos para cada seção (`below-fold`).
+
 ## Decisões e evolução
 
 - **Por que gravar direto do navegador no Supabase?** O salvamento automático precisa ser leve e tolerante a

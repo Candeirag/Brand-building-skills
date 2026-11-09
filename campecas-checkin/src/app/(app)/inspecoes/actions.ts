@@ -44,7 +44,7 @@ export async function finalizeInspection(inspectionId: string): Promise<ActionRe
   return { ok: true, number: data?.[0]?.number };
 }
 
-/** Exclui um rascunho (somente o autor ou administrador — também garantido por RLS). */
+/** Exclui um rascunho (somente o autor ou administrador: também garantido por RLS). */
 export async function deleteDraft(inspectionId: string): Promise<ActionResult> {
   const profile = await requireStaff();
   const supabase = await createClient();

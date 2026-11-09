@@ -1,63 +1,76 @@
 import type { Metadata } from "next";
-import { ClipboardList, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { createInspection } from "../actions";
-import { InspectionRow } from "@/components/inspection/inspection-row";
+import { InspectionRow, InspectionTableHeader } from "@/components/inspection/inspection-row";
 import { buttonClass } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireStaff } from "@/lib/auth";
-import { INSPECTION_LIST_COLUMNS, type InspectionListItem } from "@/lib/queries";
+import { INSPECTION_ROW_SELECT, toRowData, type InspectionRowData } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
+import { elapsed } from "@/lib/time";
 
 export const metadata: Metadata = { title: "Em andamento" };
 
+/* Pergunta da tela: "Qual rascunho eu preciso terminar?": os meus primeiro, do mais antigo. */
 export default async function DraftsPage() {
   const profile = await requireStaff();
   const supabase = await createClient();
+  const now = new Date();
   const { data } = await supabase
     .from("inspections")
-    .select(`${INSPECTION_LIST_COLUMNS}, inspector_id`)
+    .select(`${INSPECTION_ROW_SELECT}, inspector_id`)
     .eq("status", "draft")
-    .order("updated_at", { ascending: false })
+    .order("started_at", { ascending: true })
     .limit(100);
 
-  const mine = (data ?? []).filter((d) => d.inspector_id === profile.id) as InspectionListItem[];
-  const others = (data ?? []).filter((d) => d.inspector_id !== profile.id) as InspectionListItem[];
+  const all = (data ?? []).map((d) => ({ ...toRowData(d), inspector_id: d.inspector_id }));
+  const mine: InspectionRowData[] = all.filter((d) => d.inspector_id === profile.id);
+  const others: InspectionRowData[] = all.filter((d) => d.inspector_id !== profile.id);
+  const oldest = all[0];
 
   return (
-    <main className="mx-auto max-w-4xl space-y-5 px-4 py-5 sm:px-6 sm:py-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <main className="mx-auto max-w-[1280px] px-4 pt-5 lg:px-8 lg:pt-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="display text-3xl font-extrabold">Inspeções em andamento</h1>
-          <p className="text-steel">Rascunhos salvos automaticamente. Toque para continuar.</p>
+          <h1 className="h1">Inspeções em andamento</h1>
+          <p className="mt-1 text-[15px] text-muted">
+            {all.length
+              ? `${all.length} aberta${all.length > 1 ? "s" : ""}; a mais antiga começou ${elapsed(oldest!.started_at, now)}. O rascunho é salvo automaticamente.`
+              : "Nenhum rascunho aberto. Todas as inspeções foram finalizadas."}
+          </p>
         </div>
-        <form action={createInspection}>
-          <button type="submit" className={buttonClass("primary", "lg", "w-full")}>
-            <Plus size={20} /> Nova inspeção
+        <form action={createInspection} className="flex-none">
+          <button type="submit" className={buttonClass("primary", "lg", "w-full sm:h-10 sm:w-auto")}>
+            <Plus size={18} strokeWidth={2.25} /> Nova inspeção
           </button>
         </form>
       </div>
 
-      {[
-        { title: "Minhas", list: mine },
-        { title: "Da equipe", list: others },
-      ].map(({ title, list }) => (
-        <section key={title} className="card overflow-hidden">
-          <header className="border-b border-line px-4 py-3 sm:px-5">
-            <h2 className="display text-lg font-bold">
-              {title} <span className="text-steel">({list.length})</span>
-            </h2>
-          </header>
-          {list.length ? (
-            <ul className="divide-y divide-line">
-              {list.map((item) => (
-                <InspectionRow key={item.id} item={item} />
-              ))}
-            </ul>
-          ) : (
-            <EmptyState icon={<ClipboardList size={32} />} title="Nenhum rascunho" />
-          )}
-        </section>
-      ))}
+      <div className="mt-6 space-y-6">
+        {[
+          { title: "Iniciadas por você", list: mine, empty: "Você não tem rascunhos abertos." },
+          { title: "Iniciadas pela equipe", list: others, empty: "Nenhum rascunho aberto pela equipe." },
+        ].map(({ title, list, empty }) => (
+          <section key={title} className="panel overflow-hidden">
+            <header className="flex items-baseline justify-between px-4 py-3.5">
+              <h2 className="h2">{title}</h2>
+              <span className="num text-sm text-muted">{list.length}</span>
+            </header>
+            {list.length ? (
+              <>
+                <InspectionTableHeader />
+                <ul className="border-t border-rule">
+                  {list.map((item) => (
+                    <InspectionRow key={item.id} item={item} now={now} />
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <EmptyState title={empty} />
+            )}
+          </section>
+        ))}
+      </div>
     </main>
   );
 }

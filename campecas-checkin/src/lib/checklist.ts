@@ -21,7 +21,7 @@ export const FUEL_LEVELS: { value: FuelLevel; label: string; fraction: number }[
 ];
 
 export function fuelLabel(value: FuelLevel | null | undefined): string {
-  return FUEL_LEVELS.find((f) => f.value === value)?.label ?? "—";
+  return FUEL_LEVELS.find((f) => f.value === value)?.label ?? "–";
 }
 
 export type ChecklistItemState = {

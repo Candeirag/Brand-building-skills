@@ -5,16 +5,19 @@ dados do veículo e do proprietário, quilometragem, data e hora automáticas, c
 pela câmera do celular, avarias preexistentes, responsáveis, histórico completo e relatório PDF.
 
 <p>
-  <img src="docs/telas/painel-celular.jpg" alt="Painel no celular" width="220" />
-  <img src="docs/telas/inspecao-veiculo.jpg" alt="Inspeção — veículo localizado pela placa" width="220" />
-  <img src="docs/telas/checklist.jpg" alt="Checklist" width="220" />
-  <img src="docs/telas/relatorio-pdf.jpg" alt="Relatório PDF" width="260" />
+  <img src="docs/telas/painel-desktop.jpg" alt="Painel no desktop" width="560" />
+</p>
+<p>
+  <img src="docs/telas/painel-celular.jpg" alt="Painel no celular" width="200" />
+  <img src="docs/telas/checklist-mapa.jpg" alt="Checklist com o mapa de avarias ao vivo" width="200" />
+  <img src="docs/telas/relatorio-pdf.jpg" alt="Relatório PDF" width="240" />
 </p>
 
 **Stack:** Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · Supabase (PostgreSQL, Auth, Storage) ·
 @react-pdf/renderer · zod.
 
-A arquitetura, o modelo de dados e as medidas de segurança e LGPD estão em [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
+A arquitetura, o modelo de dados, as medidas de segurança e LGPD e a direção de arte estão em
+[docs/ARQUITETURA.md](docs/ARQUITETURA.md).
 
 ## Funcionalidades
 
@@ -27,7 +30,8 @@ A arquitetura, o modelo de dados e as medidas de segurança e LGPD estão em [do
 | **Fotos** | Câmera traseira direto do navegador, compressão para JPEG, marca com placa/data/hora, armazenamento privado no Supabase Storage |
 | **Finalização** | Valida pendências, gera número único (`CP2026-000124`), registra data/hora/responsável e torna a inspeção imutável |
 | **Histórico** | Busca por placa, proprietário ou número, filtro por período e situação, paginação, fotos ampliáveis, histórico por veículo |
-| **Relatório PDF** | Identidade visual Campeças, veículo, proprietário (documento mascarado), km, data, checklist, avarias, fotos, responsáveis e campos de assinatura |
+| **Mapa de avarias** | Silhueta do carro vista de cima com cada zona no estado do checklist: atualiza ao vivo no editor e aparece na inspeção finalizada e no PDF |
+| **Relatório PDF** | Identidade visual Campeças, veículo, proprietário (documento mascarado), km, data, checklist, mapa e descrição das avarias, fotos, responsáveis e campos de assinatura |
 | **Equipe (admin)** | Cadastrar funcionários, definir função, desativar/reativar acesso, redefinir senha, anonimizar dados de clientes (LGPD) |
 | **Celular** | Layout mobile-first, botões grandes, instalável na tela inicial (manifest PWA) |
 

@@ -14,7 +14,7 @@ import {
 describe("formatação", () => {
   it("placa", () => {
     expect(formatPlate("ABC1D23")).toBe("ABC-1D23");
-    expect(formatPlate(null)).toBe("—");
+    expect(formatPlate(null)).toBe("–");
   });
   it("telefone", () => {
     expect(formatPhone("11987654321")).toBe("(11) 98765-4321");

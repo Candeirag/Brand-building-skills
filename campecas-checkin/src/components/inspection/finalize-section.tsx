@@ -34,7 +34,7 @@ export function FinalizeSection({
   const ready = issues.length === 0;
 
   return (
-    <SectionCard id="finalizacao" step={5} title="Finalização" subtitle="Responsáveis, observações e confirmação" complete={ready}>
+    <SectionCard id="finalizacao" title="Finalização" subtitle="Responsáveis, observações e confirmação" complete={ready}>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <TextField
           label="Funcionário responsável"
@@ -62,8 +62,8 @@ export function FinalizeSection({
                 key={m.id}
                 type="button"
                 onClick={() => update("mechanic_name", m.full_name)}
-                className={`h-9 rounded-full border px-3.5 text-sm font-semibold ${
-                  form.mechanic_name === m.full_name ? "border-ink bg-ink text-white" : "border-line bg-white text-graphite"
+                className={`h-9 rounded-full border px-3.5 text-sm ${
+                  form.mechanic_name === m.full_name ? "border-ink bg-ink font-medium text-white" : "border-control bg-surface text-ink hover:border-faint"
                 }`}
               >
                 {m.full_name}
@@ -89,38 +89,38 @@ export function FinalizeSection({
       </div>
 
       {damagedLabels.length > 0 && (
-        <div className="mt-6 rounded-xl border border-brand-red/30 bg-brand-red-soft/50 p-4">
-          <p className="flex items-center gap-2 text-sm font-bold text-brand-red-dark">
-            <AlertTriangle size={18} /> Avarias preexistentes registradas ({damagedLabels.length})
+        <div className="mt-6 rounded-card border border-tint-2 bg-tint px-4 py-3">
+          <p className="flex items-center gap-2 text-sm font-medium text-accent-ink">
+            <AlertTriangle size={16} /> {damagedLabels.length} avaria{damagedLabels.length > 1 ? "s" : ""} preexistente{damagedLabels.length > 1 ? "s" : ""} vão para o laudo
           </p>
-          <p className="mt-1 text-sm text-graphite">{damagedLabels.join(" · ")}</p>
+          <p className="mt-0.5 text-sm text-ink">{damagedLabels.join(" · ")}</p>
         </div>
       )}
 
       {warnings.length > 0 && (
-        <ul className="mt-4 space-y-1.5 rounded-xl bg-warn-soft p-4 text-sm text-warn">
+        <ul className="mt-4 space-y-1.5 rounded-card border border-warning-border bg-warning-bg px-4 py-3 text-sm text-warning-ink">
           {warnings.map((w) => (
             <li key={w} className="flex gap-2">
-              <CircleAlert size={17} className="mt-0.5 shrink-0" /> {w}
+              <CircleAlert size={15} className="mt-0.5 shrink-0" /> {w}
             </li>
           ))}
         </ul>
       )}
 
       <label
-        className={`mt-6 flex cursor-pointer items-start gap-4 rounded-xl border-2 p-4 transition ${
-          form.checklist_confirmed ? "border-ok bg-ok-soft" : "border-line bg-white"
+        className={`mt-6 flex cursor-pointer items-start gap-3 rounded-card border p-4 transition ${
+          form.checklist_confirmed ? "border-positive/40 bg-positive-bg" : "border-control bg-surface"
         }`}
       >
         <input
           type="checkbox"
           checked={form.checklist_confirmed}
           onChange={(e) => update("checklist_confirmed", e.target.checked)}
-          className="mt-0.5 h-7 w-7 shrink-0 accent-[#15803d]"
+          className="mt-0.5 h-6 w-6 shrink-0 accent-[#247b50]"
         />
         <span>
-          <span className="block font-semibold">Confirmo que o checklist foi concluído</span>
-          <span className="block text-sm text-steel">
+          <span className="block font-medium">Confirmo que o checklist foi concluído</span>
+          <span className="block text-sm text-muted">
             As condições registradas correspondem ao estado do veículo na entrada. Após finalizar, a inspeção não poderá
             ser alterada.
           </span>
@@ -128,12 +128,12 @@ export function FinalizeSection({
       </label>
 
       {!ready && (
-        <div className="mt-4 rounded-xl bg-paper p-4">
-          <p className="mb-2 text-sm font-bold text-graphite">Antes de finalizar:</p>
-          <ul className="space-y-1 text-sm text-graphite">
+        <div className="mt-4 rounded-card bg-raised px-4 py-3">
+          <p className="mb-1.5 text-sm font-medium">Falta para finalizar</p>
+          <ul className="space-y-1 text-sm text-ink">
             {issues.map((i) => (
               <li key={i} className="flex gap-2">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-red" /> {i}
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-faint" /> {i}
               </li>
             ))}
           </ul>
@@ -141,7 +141,7 @@ export function FinalizeSection({
       )}
 
       {finalizeError && (
-        <p role="alert" className="mt-4 rounded-xl bg-brand-red-soft px-4 py-3 text-sm font-medium text-brand-red-dark">
+        <p role="alert" className="mt-4 rounded-card border border-tint-2 bg-tint px-4 py-3 text-sm text-accent-ink">
           {finalizeError}
         </p>
       )}
@@ -150,15 +150,15 @@ export function FinalizeSection({
         type="button"
         onClick={onFinalize}
         disabled={!ready || finalizing}
-        className={buttonClass("primary", "xl", "mt-6 w-full")}
+        className={buttonClass("primary", "lg", "mt-6 h-12 w-full")}
       >
-        {finalizing ? <LoaderCircle size={24} className="animate-spin" /> : ready ? <Flag size={24} /> : <CheckCircle2 size={24} />}
+        {finalizing ? <LoaderCircle size={18} className="animate-spin" /> : ready ? <Flag size={18} /> : <CheckCircle2 size={18} />}
         Finalizar inspeção
       </button>
 
       {canDelete && (
-        <button type="button" onClick={onDelete} className={buttonClass("ghost", "md", "mt-3 w-full text-brand-red")}>
-          <Trash2 size={18} /> Excluir rascunho
+        <button type="button" onClick={onDelete} className={buttonClass("ghost", "lg", "mt-3 w-full text-accent-ink")}>
+          <Trash2 size={16} /> Excluir este rascunho e as fotos
         </button>
       )}
     </SectionCard>

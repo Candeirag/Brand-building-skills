@@ -1,18 +1,18 @@
 import { formatPlate } from "@/lib/format";
 
-/** Placa estilizada no padrão Mercosul. */
+/** Placa no padrão Mercosul: o objeto que a equipe reconhece de vista. */
 export function Plate({ value, size = "md" }: { value: string | null; size?: "sm" | "md" | "lg" }) {
   const cls = {
-    sm: "text-sm px-2 pt-2.5 pb-0.5 min-w-[5.5rem]",
-    md: "text-base px-2.5 pt-3 pb-1 min-w-[6.5rem]",
-    lg: "text-2xl px-4 pt-4 pb-1.5 min-w-[10rem]",
+    sm: "text-[13px] px-1.5 pt-[9px] pb-[2px] w-[5.75rem]",
+    md: "text-[15px] px-2 pt-[11px] pb-[3px] w-[6.75rem]",
+    lg: "text-[22px] px-3 pt-[15px] pb-[4px] w-[9.75rem]",
   }[size];
   return (
     <span
-      className={`relative inline-flex shrink-0 justify-center overflow-hidden rounded-md whitespace-nowrap border-2 border-ink bg-white font-mono font-bold tracking-wider text-ink ${cls}`}
+      className={`relative inline-flex flex-none justify-center overflow-hidden rounded-chip border-[1.5px] border-ink bg-surface id-type leading-none font-bold tracking-wide whitespace-nowrap text-ink ${cls}`}
     >
-      <span className="absolute inset-x-0 top-0 h-[22%] bg-[#1f4fa3]" aria-hidden="true" />
-      {value ? formatPlate(value) : "SEM PLACA"}
+      <span className="absolute inset-x-0 top-0 h-[24%] bg-plate-band" aria-hidden="true" />
+      {value ? formatPlate(value) : "Sem placa"}
     </span>
   );
 }

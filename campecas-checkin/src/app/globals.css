@@ -1,25 +1,60 @@
 @import "tailwindcss";
 
-/* Identidade visual CAMPEÇAS — preto, vermelho, branco e cinza grafite */
+/*
+ * CAMPEÇAS CHECK-IN: estilo "accent ladder" (direção de arte, seed 1386293280)
+ * Um matiz só, o vermelho Campeças: cheio apenas em marcas pequenas (avarias, ícone ativo,
+ * o único botão principal); os tons claros dele fazem o trabalho de área.
+ * Chrome claro, superfícies chapadas: borda de 1 px OU degrau de tom, nunca sombra em repouso.
+ * Raio fechado: card 8 / controle 6 / chip 4.
+ */
 @theme {
-  --color-brand-red: #e10600;
-  --color-brand-red-dark: #b30500;
-  --color-brand-red-soft: #fdeceb;
-  --color-ink: #0b0b0c;
-  --color-graphite: #2b2d31;
-  --color-graphite-2: #3a3d42;
-  --color-steel: #6b7078;
-  --color-line: #e3e4e7;
-  --color-paper: #f3f4f6;
-  --color-ok: #15803d;
-  --color-ok-soft: #e8f6ed;
-  --color-warn: #b45309;
-  --color-warn-soft: #fef3e2;
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+
+  /* Superfícies (fundo um degrau tingido em direção ao vermelho) */
+  --color-ground: #fbf8f8;
+  --color-surface: #ffffff;
+  --color-raised: #f6f2f2;
+  --color-active: #fdeceb;
+
+  /* Escada do matiz */
+  --color-tint: #fdeceb;
+  --color-tint-2: #f9d6d3;
+  --color-accent: #e10600;
+  --color-accent-ink: #8c1410;
+
+  /* Linhas em três degraus */
+  --color-border: #ebe6e6;
+  --color-rule: #f3eeee;
+  --color-control: #d4cfcf;
+  --color-dash: #e2dcdc;
+
+  /* Texto em três níveis (todos >= 4,5:1 sobre o fundo) */
+  --color-ink: #111111;
+  --color-muted: #5f6368;
+  --color-faint: #6b6b6b;
+  --color-primary: #1d1f20;
+
+  /* Status */
+  --color-positive: #247b50;
+  --color-positive-bg: #dcfae5;
+  --color-positive-ink: #04250e;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fde68a;
+  --color-warning-ink: #92400e;
+
+  /* Placa Mercosul (objeto do produto) */
+  --color-plate-band: #1f4fa3;
 
   --font-sans: var(--font-barlow), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: var(--font-barlow-condensed), var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
+  --font-brand: var(--font-barlow-brand), var(--font-barlow), ui-sans-serif, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace; /* taste-skill-ignore: só em .id-type */
 
-  --radius-xl: 0.875rem;
+  --radius-card: 8px;
+  --radius-control: 6px;
+  --radius-chip: 4px;
 }
 
 :root {
@@ -32,13 +67,15 @@ html {
 }
 
 body {
-  background: var(--color-paper);
+  background: var(--color-ground);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Campos com tamanho mínimo de 16px evitam zoom automático no iOS */
+/* Campos com 16 px evitam o zoom automático do iOS */
 input,
 select,
 textarea {
@@ -47,24 +84,30 @@ textarea {
 
 @layer components {
   .field-label {
-    @apply mb-1.5 block text-sm font-semibold tracking-wide text-graphite;
+    @apply mb-2 block text-sm font-medium text-ink;
   }
   .field-input {
-    @apply block h-13 w-full rounded-xl border border-line bg-white px-4 text-base text-ink shadow-xs transition outline-none placeholder:text-steel/60 focus:border-ink focus:ring-4 focus:ring-ink/10 disabled:bg-paper disabled:text-steel aria-invalid:border-brand-red aria-invalid:ring-brand-red/15;
+    @apply block h-11 w-full rounded-control border border-control bg-surface px-3 text-base text-ink transition outline-none placeholder:text-faint focus:border-ink focus:ring-3 focus:ring-ink/10 disabled:bg-raised disabled:text-muted aria-invalid:border-accent aria-invalid:ring-accent/15;
   }
   .field-textarea {
-    @apply block min-h-24 w-full rounded-xl border border-line bg-white px-4 py-3 text-base text-ink shadow-xs transition outline-none placeholder:text-steel/60 focus:border-ink focus:ring-4 focus:ring-ink/10 disabled:bg-paper;
+    @apply block min-h-24 w-full rounded-control border border-control bg-surface px-3 py-2.5 text-base text-ink transition outline-none placeholder:text-faint focus:border-ink focus:ring-3 focus:ring-ink/10;
   }
-  .card {
-    @apply rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)];
+  .panel {
+    @apply rounded-card border border-border bg-surface;
   }
-  .display {
-    font-family: var(--font-display);
-    @apply tracking-wide uppercase;
+  .num {
+    font-variant-numeric: tabular-nums;
   }
-  /* Faixa diagonal (motivo automotivo) */
-  .racing-stripe {
-    background: repeating-linear-gradient(-55deg, var(--color-brand-red) 0 10px, transparent 10px 18px);
+  /* Identificadores (placa, nº da inspeção, senha provisória): regra de app "mono só para IDs". */
+  .id-type {
+    font-family: var(--font-mono); /* taste-skill-ignore: identificadores */
+    font-variant-numeric: tabular-nums;
+  }
+  .h1 {
+    @apply text-2xl leading-8 font-semibold text-ink;
+  }
+  .h2 {
+    @apply text-base leading-6 font-semibold text-ink;
   }
 }
 

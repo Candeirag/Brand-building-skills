@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, History, Sparkles } from "lucide-react";
+import { CalendarClock, History } from "lucide-react";
 import Link from "next/link";
 import { formatDateTime, formatKm, formatNumber } from "@/lib/format";
 import { fieldErrors, parseMileage, vehicleSectionComplete, type InspectionForm } from "@/lib/inspection-form";
@@ -49,7 +49,6 @@ export function VehicleSection({
   return (
     <SectionCard
       id="veiculo"
-      step={1}
       title="Veículo"
       subtitle="Placa, identificação e quilometragem"
       complete={vehicleSectionComplete(form)}
@@ -61,36 +60,35 @@ export function VehicleSection({
             value={form.plate}
             onValueChange={(v) => update("plate", normalizePlate(v))}
             error={errors.plate}
-            hint={lookingUp ? "Buscando cadastro…" : "Padrão antigo ou Mercosul"}
+            hint={lookingUp ? "Buscando cadastro…" : "Mercosul (ABC1D23) ou antiga (ABC1234)"}
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}
             maxLength={8}
-            placeholder="ABC1D23"
-            inputClassName="h-16 text-center font-mono text-3xl font-bold tracking-[0.25em] uppercase"
+            placeholder="Digite a placa"
+            inputClassName="h-14 text-center id-type text-2xl font-bold tracking-[0.2em] uppercase"
             enterKeyHint="next"
           />
         </div>
 
         {lookup && (
-          <div className="rounded-xl border border-ink/10 bg-paper p-4 sm:col-span-2">
-            <p className="flex items-center gap-2 text-sm font-semibold">
-              <Sparkles size={16} className="text-brand-red" />
+          <div className="rounded-card border border-tint-2 bg-tint px-4 py-3 sm:col-span-2">
+            <p className="text-sm font-medium text-accent-ink">
               Veículo já atendido pela oficina
             </p>
-            <p className="mt-1 text-sm text-graphite">
-              {[lookup.brand, lookup.model].filter(Boolean).join(" ") || "—"}
+            <p className="mt-0.5 text-sm text-ink">
+              {[lookup.brand, lookup.model].filter(Boolean).join(" ") || "–"}
               {lookup.owner_name && <> · {lookup.owner_name}</>}
               {lastKnown !== null && <> · última km {formatKm(lastKnown)}</>}
             </p>
             {lookup.filled.length > 0 && (
-              <p className="mt-1 text-xs text-steel">Preenchido automaticamente: {lookup.filled.join(", ")}.</p>
+              <p className="mt-0.5 text-xs text-muted">Preenchido automaticamente: {lookup.filled.join(", ")}.</p>
             )}
             {lookup.last_inspection && (
               <Link
                 href={`/veiculos/${lookup.plate}`}
                 target="_blank"
-                className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-red"
+                className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-ink underline-offset-2 hover:underline"
               >
                 <History size={15} /> Ver histórico ({lookup.last_inspection.number},{" "}
                 {formatDateTime(lookup.last_inspection.finalized_at)})
@@ -129,7 +127,7 @@ export function VehicleSection({
           onValueChange={(v) => update("year", onlyDigits(v).slice(0, 4))}
           error={errors.year}
           inputMode="numeric"
-          placeholder="2020"
+          placeholder="Ex.: 2020"
           maxLength={4}
           enterKeyHint="next"
         />
@@ -144,7 +142,7 @@ export function VehicleSection({
           error={errors.mileage}
           hint={mileageWarning}
           inputMode="numeric"
-          placeholder="0"
+          placeholder="Leia no hodômetro"
           suffix="km"
           enterKeyHint="done"
         />
@@ -157,7 +155,7 @@ export function VehicleSection({
             autoComplete="off"
             placeholder="Selecione ou digite"
           />
-          <div className="mt-2.5">
+          <div className="mt-2">
             <ChoiceChips
               label="Cores comuns"
               options={COLORS.map((c) => ({ value: c, label: c }))}
@@ -167,10 +165,10 @@ export function VehicleSection({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl bg-paper px-4 py-3 text-sm text-graphite sm:col-span-2">
-          <CalendarClock size={20} className="shrink-0 text-steel" />
+        <div className="flex items-center gap-2.5 text-sm text-muted sm:col-span-2">
+          <CalendarClock size={16} className="shrink-0" />
           <span>
-            Entrada registrada em <strong>{formatDateTime(startedAt)}</strong> (automático)
+            Entrada registrada automaticamente em <span className="num text-ink">{formatDateTime(startedAt)}</span>
           </span>
         </div>
       </div>

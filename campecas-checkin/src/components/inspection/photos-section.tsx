@@ -28,12 +28,11 @@ export function PhotosSection({
   return (
     <SectionCard
       id="fotos"
-      step={4}
       title="Fotografias"
-      subtitle={`${done} de ${recommended.length} ângulos obrigatórios · ${photos.length} foto(s)`}
+      subtitle={`${done} de ${recommended.length} ângulos recomendados · ${photos.length} foto${photos.length === 1 ? "" : "s"} no total`}
       complete={done === recommended.length}
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         {PHOTO_CATEGORIES.map((cat) => {
           const catPhotos = photos.filter((p) => p.category === cat.value);
           const catPending = pending.filter((p) => p.category === cat.value);
@@ -41,18 +40,18 @@ export function PhotosSection({
           return (
             <div key={cat.value}>
               <div className="mb-2 flex items-baseline justify-between gap-2">
-                <h3 className="font-semibold">
+                <h3 className="text-sm font-medium">
                   {cat.label}
-                  {cat.recommended && catPhotos.length === 0 && <span className="ml-1 text-brand-red">*</span>}
+                  {cat.recommended && catPhotos.length === 0 && <span className="ml-1.5 text-xs font-normal text-muted">recomendada</span>}
                 </h3>
-                <span className="text-xs text-steel">{cat.hint}</span>
+                <span className="hidden text-xs text-muted sm:inline">{cat.hint}</span>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {catPhotos.map((p) => (
                   <div key={p.id} className="relative">
                     <PhotoTile photo={p} onOpen={() => onOpenPhoto(p)} onDelete={() => onDeletePhoto(p)} />
                     {p.item_key && cat.value === "damage" && (
-                      <span className="pointer-events-none absolute bottom-1.5 left-1.5 rounded bg-brand-red px-1.5 py-0.5 text-[10px] font-bold text-white">
+                      <span className="pointer-events-none absolute bottom-1.5 left-1.5 rounded-chip bg-accent px-1.5 py-0.5 text-[11px] font-medium text-white">
                         Checklist
                       </span>
                     )}
@@ -76,7 +75,7 @@ export function PhotosSection({
           );
         })}
       </div>
-      <p className="mt-5 text-xs text-steel">
+      <p className="mt-5 text-xs text-muted">
         As fotos recebem automaticamente placa, data e hora, e ficam armazenadas com segurança na nuvem, vinculadas a esta
         inspeção.
       </p>

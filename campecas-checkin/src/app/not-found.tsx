@@ -1,13 +1,14 @@
 import Link from "next/link";
+import { LogoMark } from "@/components/brand/logo";
 import { buttonClass } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
-      <p className="display text-6xl font-extrabold text-brand-red">404</p>
-      <h1 className="text-xl font-semibold">Página não encontrada</h1>
-      <p className="text-steel">O endereço acessado não existe ou a inspeção não está disponível.</p>
-      <Link href="/" className={buttonClass("dark", "lg")}>
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-3 p-6 text-center">
+      <LogoMark className="h-10 w-10" />
+      <h1 className="h1 mt-2">Página não encontrada</h1>
+      <p className="max-w-sm text-[15px] text-muted">O endereço não existe ou a inspeção não está disponível para o seu acesso.</p>
+      <Link href="/" className={buttonClass("outline", "lg", "mt-2")}>
         Voltar ao painel
       </Link>
     </main>

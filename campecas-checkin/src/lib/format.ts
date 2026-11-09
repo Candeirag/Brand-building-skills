@@ -26,17 +26,17 @@ const isoDateFmt = new Intl.DateTimeFormat("en-CA", {
 const numberFmt = new Intl.NumberFormat("pt-BR");
 
 export function formatDateTime(value: string | Date | null | undefined): string {
-  if (!value) return "—";
+  if (!value) return "–";
   return dateTimeFmt.format(new Date(value)).replace(",", " às");
 }
 
 export function formatDate(value: string | Date | null | undefined): string {
-  if (!value) return "—";
+  if (!value) return "–";
   return dateFmt.format(new Date(value));
 }
 
 export function formatTime(value: string | Date | null | undefined): string {
-  if (!value) return "—";
+  if (!value) return "–";
   return timeFmt.format(new Date(value));
 }
 
@@ -55,7 +55,7 @@ export function endOfDaySaoPaulo(isoDate: string): string {
 }
 
 export function formatKm(value: number | null | undefined): string {
-  if (value == null) return "—";
+  if (value == null) return "–";
   return `${numberFmt.format(value)} km`;
 }
 
@@ -66,7 +66,7 @@ export function formatNumber(value: number | null | undefined): string {
 /** ABC1D23 → ABC-1D23 */
 export function formatPlate(value: string | null | undefined): string {
   const p = normalizePlate(value);
-  if (!p) return "—";
+  if (!p) return "–";
   return p.length > 3 ? `${p.slice(0, 3)}-${p.slice(3)}` : p;
 }
 
@@ -96,12 +96,12 @@ export function formatDocument(value: string | null | undefined): string {
     .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
 }
 
-/** LGPD — exibe documento parcialmente: ***.456.789-** / **.345.678/0001-** */
+/** LGPD: exibe documento parcialmente: ***.456.789-** / **.345.678/0001-** */
 export function maskDocument(value: string | null | undefined): string {
   const d = onlyDigits(value);
   if (d.length === 11) return `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**`;
   if (d.length === 14) return `**.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-**`;
-  return d ? "***" : "—";
+  return d ? "***" : "–";
 }
 
 /** Link wa.me para WhatsApp (Brasil). */

@@ -2,7 +2,7 @@
 
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { useId } from "react";
-import { Check } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 
 type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> & {
   label: string;
@@ -14,6 +14,7 @@ type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "
   inputClassName?: string;
 };
 
+/** Rótulo acima do campo (14/500), dica ou erro abaixo. */
 export function TextField({
   label,
   value,
@@ -39,21 +40,19 @@ export function TextField({
           onChange={(e) => onValueChange(e.target.value)}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={`field-input ${suffix ? "pr-14" : ""} ${inputClassName}`}
+          className={`field-input ${suffix ? "pr-12" : ""} ${inputClassName}`}
           {...rest}
         />
         {suffix && (
-          <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-semibold text-steel">
-            {suffix}
-          </span>
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted">{suffix}</span>
         )}
       </div>
       {error ? (
-        <p id={`${id}-err`} className="mt-1.5 text-sm font-medium text-brand-red">
+        <p id={`${id}-err`} className="mt-1.5 text-sm text-accent-ink">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="mt-1.5 text-sm text-steel">
+        <p id={`${id}-hint`} className="mt-1.5 text-sm text-muted">
           {hint}
         </p>
       ) : null}
@@ -61,6 +60,7 @@ export function TextField({
   );
 }
 
+/** Escolha rápida em chips (cores, mecânicos). */
 export function ChoiceChips<T extends string>({
   options,
   value,
@@ -83,8 +83,8 @@ export function ChoiceChips<T extends string>({
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(o.value)}
-            className={`h-10 rounded-full border px-4 text-sm font-semibold transition ${
-              selected ? "border-ink bg-ink text-white" : "border-line bg-white text-graphite hover:border-graphite/40"
+            className={`h-9 rounded-full border px-3.5 text-sm transition ${
+              selected ? "border-ink bg-ink font-medium text-white" : "border-control bg-surface text-ink hover:border-faint"
             }`}
           >
             {o.label}
@@ -95,9 +95,9 @@ export function ChoiceChips<T extends string>({
   );
 }
 
+/** Seção do editor: título-substantivo, uma linha de contexto e o sinal de concluída. */
 export function SectionCard({
   id,
-  step,
   title,
   subtitle,
   complete,
@@ -105,7 +105,6 @@ export function SectionCard({
   aside,
 }: {
   id: string;
-  step: number;
   title: string;
   subtitle?: string;
   complete?: boolean;
@@ -113,25 +112,18 @@ export function SectionCard({
   aside?: ReactNode;
 }) {
   return (
-    <section id={id} className="card scroll-mt-44 overflow-hidden" aria-labelledby={`${id}-title`}>
-      <header className="flex items-center gap-3 border-b border-line px-4 py-4 sm:px-6">
-        <span
-          className={`display flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg font-extrabold ${
-            complete ? "bg-ok text-white" : "bg-ink text-white"
-          }`}
-          aria-hidden="true"
-        >
-          {complete ? <Check size={20} strokeWidth={3} /> : step}
-        </span>
+    <section id={id} className="panel scroll-mt-28 lg:scroll-mt-24" aria-labelledby={`${id}-title`}>
+      <header className="flex items-start gap-3 px-4 pt-4 pb-1 sm:px-5 sm:pt-5">
         <div className="min-w-0 flex-1">
-          <h2 id={`${id}-title`} className="display text-xl leading-tight font-bold">
+          <h2 id={`${id}-title`} className="h2 flex items-center gap-2">
             {title}
+            {complete && <CircleCheck size={17} className="text-positive" aria-label="Concluída" />}
           </h2>
-          {subtitle && <p className="text-sm text-steel">{subtitle}</p>}
+          {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
         </div>
         {aside}
       </header>
-      <div className="p-4 sm:p-6">{children}</div>
+      <div className="px-4 pt-4 pb-5 sm:px-5">{children}</div>
     </section>
   );
 }

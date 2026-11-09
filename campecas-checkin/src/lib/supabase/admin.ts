@@ -5,7 +5,7 @@ import type { Database } from "./database.types";
 import { SUPABASE_URL } from "@/lib/env";
 
 /**
- * Cliente com a service role. IGNORA as políticas RLS — usar somente em
+ * Cliente com a service role. IGNORA as políticas RLS: usar somente em
  * Server Actions que já verificaram que o usuário é administrador.
  */
 export function createAdminClient() {

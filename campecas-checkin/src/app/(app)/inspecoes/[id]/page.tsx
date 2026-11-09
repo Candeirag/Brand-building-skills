@@ -1,15 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { AlertTriangle, ArrowLeft, CheckCircle2, FileDown, History, MessageCircle, Plus } from "lucide-react";
+import { CheckCircle2, FileDown, MessageCircle, Plus } from "lucide-react";
 import { createInspection } from "../actions";
+import { DamageMap } from "@/components/inspection/damage-map";
 import { PhotoGallery, type GalleryGroup } from "@/components/inspection/photo-gallery";
 import { buttonClass } from "@/components/ui/button";
 import { Plate } from "@/components/ui/plate";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { requireStaff } from "@/lib/auth";
 import { CHECKLIST_STATUS, fuelLabel, groupItems } from "@/lib/checklist";
-import { formatDateTime, formatDocument, formatKm, formatPhone, formatPlate, maskDocument, whatsappLink } from "@/lib/format";
+import { MAPPED_KEYS } from "@/lib/damage-map";
+import {
+  formatDateTime,
+  formatDocument,
+  formatKm,
+  formatNumber,
+  formatPhone,
+  formatPlate,
+  formatTime,
+  maskDocument,
+  whatsappLink,
+} from "@/lib/format";
 import { loadInspection } from "@/lib/inspection-data";
 import { PHOTO_CATEGORIES } from "@/lib/photos";
 
@@ -19,22 +30,31 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return { title: data?.inspection.number ?? "Inspeção" };
 }
 
-const STATUS_PILL = {
-  ok: "bg-ok-soft text-ok",
-  damaged: "bg-brand-red text-white",
-  not_checked: "bg-paper text-graphite",
-  not_applicable: "bg-paper text-steel",
+/* Cinza para o que está bem; a cor fica só na linha em risco. */
+const STATUS_TEXT = {
+  ok: "text-muted",
+  damaged: "font-medium text-accent-ink",
+  not_checked: "text-muted",
+  not_applicable: "text-muted",
 } as const;
 
-function Info({ label, value }: { label: string; value: React.ReactNode }) {
+function KeyValue({ rows }: { rows: [string, React.ReactNode][] }) {
   return (
-    <div>
-      <dt className="text-xs font-semibold tracking-wide text-steel uppercase">{label}</dt>
-      <dd className="mt-0.5 font-semibold break-words">{value || "—"}</dd>
-    </div>
+    <dl className="divide-y divide-rule">
+      {rows.map(([k, v]) => (
+        <div key={k} className="flex min-h-9 items-baseline justify-between gap-4 py-2">
+          <dt className="flex-none text-sm text-muted">{k}</dt>
+          <dd className="min-w-0 text-right text-sm break-words">{v || <span className="text-muted">–</span>}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
+/*
+ * Pergunta da tela: "Em que estado este carro entrou?": respondida pelo mapa de avarias (maior bloco).
+ * Grid desktop igual ao painel: 1fr + 384 px, vão de 24 px.
+ */
 export default async function InspectionPage({
   params,
   searchParams,
@@ -50,13 +70,19 @@ export default async function InspectionPage({
   if (i.status === "draft") redirect(`/inspecoes/${id}/editar`);
 
   const damaged = items.filter((it) => it.status === "damaged");
+  const groups = groupItems(items);
+  const statusByKey = Object.fromEntries(items.map((it) => [it.item_key, it.status]));
+  const offMapDamaged = damaged.filter((d) => !MAPPED_KEYS.has(d.item_key));
   const labelByKey = new Map(items.map((it) => [it.item_key, it.item_label]));
+  const photosByItem = new Map<string, number>();
+  photos.forEach((p) => p.item_key && photosByItem.set(p.item_key, (photosByItem.get(p.item_key) ?? 0) + 1));
   const galleryGroups: GalleryGroup[] = PHOTO_CATEGORIES.map((c) => ({
     label: c.label,
     photos: photos
       .filter((p) => p.category === c.value)
       .map((p) => ({ id: p.id, url: p.url, caption: p.caption, tag: p.item_key ? labelByKey.get(p.item_key) : undefined })),
   }));
+  const missingAngles = PHOTO_CATEGORIES.filter((c) => c.recommended && !photos.some((p) => p.category === c.value));
 
   const contact = i.owner_whatsapp ?? i.owner_phone;
   const waText = `Olá${i.owner_name ? `, ${i.owner_name.split(" ")[0]}` : ""}! Registramos a entrada do seu veículo ${formatPlate(
@@ -66,161 +92,219 @@ export default async function InspectionPage({
   }. Qualquer dúvida, estamos à disposição.`;
   const wa = whatsappLink(contact, waText);
   const isAdmin = profile.role === "admin";
+  const vehicleName = [i.brand, i.model].filter(Boolean).join(" ");
+
+  const kpis = [
+    { label: "Quilometragem", value: i.mileage != null ? formatNumber(i.mileage) : "–", unit: i.mileage != null ? "km" : "" },
+    { label: "Combustível", value: fuelLabel(i.fuel_level), unit: "" },
+    { label: "Avarias", value: String(damaged.length), unit: `de ${items.length} itens`, alert: damaged.length > 0 },
+    { label: "Fotografias", value: String(photos.length), unit: "" },
+  ];
 
   return (
-    <main className="mx-auto max-w-4xl space-y-5 px-4 py-5 sm:px-6 sm:py-8">
-      <Link href="/historico" className="inline-flex items-center gap-1.5 text-sm font-semibold text-steel hover:text-ink">
-        <ArrowLeft size={16} /> Histórico
-      </Link>
-
+    <main className="mx-auto max-w-[1280px] px-4 pt-5 lg:px-8 lg:pt-8">
       {finalizada && (
-        <div className="overflow-hidden rounded-2xl bg-ink text-white">
-          <div className="racing-stripe h-1.5" aria-hidden="true" />
-          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-            <div className="flex items-center gap-4">
-              <CheckCircle2 size={44} className="shrink-0 text-emerald-400" />
-              <div>
-                <p className="text-sm text-white/60">Inspeção finalizada com sucesso</p>
-                <p className="display text-3xl font-extrabold">{i.number}</p>
-              </div>
-            </div>
-            <form action={createInspection}>
-              <button type="submit" className={buttonClass("primary", "lg", "w-full sm:w-auto")}>
-                <Plus size={20} /> Nova inspeção
-              </button>
-            </form>
-          </div>
+        <div className="mb-5 flex flex-col gap-3 rounded-card border border-positive/25 bg-positive-bg px-4 py-3 text-positive-ink sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex items-center gap-2.5 text-sm">
+            <CheckCircle2 size={18} className="flex-none text-positive" />
+            <span>
+              Inspeção <strong className="num font-semibold">{i.number}</strong> finalizada às {formatTime(i.finalized_at)}. O
+              registro não pode mais ser alterado.
+            </span>
+          </p>
+          <form action={createInspection} className="flex-none">
+            <button type="submit" className={buttonClass("outline", "md", "w-full")}>
+              <Plus size={16} /> Próxima inspeção
+            </button>
+          </form>
         </div>
       )}
 
-      <header className="card p-5 sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-center gap-4">
-            <Plate value={i.plate} size="lg" />
-            <div>
-              <p className="display text-2xl font-bold">{[i.brand, i.model].filter(Boolean).join(" ")}</p>
-              <p className="text-sm text-steel">
-                Nº <span className="font-mono font-semibold text-ink">{i.number}</span> · {formatDateTime(i.finalized_at)}
-              </p>
-              <div className="mt-1.5">
-                <StatusBadge status={i.status} />
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <a href={`/api/inspecoes/${i.id}/pdf`} target="_blank" rel="noopener" className={buttonClass("dark", "lg")}>
-              <FileDown size={20} /> Relatório PDF
-            </a>
-            {wa && (
-              <a href={wa} target="_blank" rel="noopener noreferrer" className={buttonClass("outline", "lg")}>
-                <MessageCircle size={20} /> WhatsApp
-              </a>
-            )}
-            {i.plate && (
-              <Link href={`/veiculos/${i.plate}`} className={buttonClass("outline", "lg")}>
-                <History size={20} /> Veículo
-              </Link>
-            )}
+      <nav aria-label="Caminho" className="text-sm text-muted">
+        <Link href="/historico" className="hover:text-ink">
+          Histórico
+        </Link>
+        {i.plate && (
+          <>
+            {" / "}
+            <Link href={`/veiculos/${i.plate}`} className="hover:text-ink">
+              {formatPlate(i.plate)}
+            </Link>
+          </>
+        )}
+      </nav>
+      <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="flex min-w-0 items-center gap-4">
+          <Plate value={i.plate} size="lg" />
+          <div className="min-w-0">
+            <h1 className="h1 num">{i.number}</h1>
+            <p className="truncate text-[15px] text-muted">
+              {vehicleName || "Veículo"} · finalizada {formatDateTime(i.finalized_at)}
+            </p>
           </div>
         </div>
-      </header>
-
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-        <section className="card p-5 sm:p-6">
-          <h2 className="display mb-4 text-lg font-bold">Veículo</h2>
-          <dl className="grid grid-cols-2 gap-4">
-            <Info label="Placa" value={formatPlate(i.plate)} />
-            <Info label="Marca" value={i.brand} />
-            <Info label="Modelo" value={i.model} />
-            <Info label="Ano" value={i.year} />
-            <Info label="Cor" value={i.color} />
-            <Info label="Quilometragem" value={formatKm(i.mileage)} />
-            <Info label="Combustível" value={fuelLabel(i.fuel_level)} />
-            <Info label="Entrada" value={formatDateTime(i.started_at)} />
-          </dl>
-        </section>
-        <section className="card p-5 sm:p-6">
-          <h2 className="display mb-4 text-lg font-bold">Proprietário</h2>
-          <dl className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <Info label="Nome" value={i.owner_name} />
-            </div>
-            <Info
-              label="CPF/CNPJ"
-              value={i.owner_document ? (isAdmin ? formatDocument(i.owner_document) : maskDocument(i.owner_document)) : null}
-            />
-            <Info label="Telefone" value={formatPhone(i.owner_phone)} />
-            <Info label="WhatsApp" value={formatPhone(i.owner_whatsapp)} />
-          </dl>
-        </section>
+        <div className="grid grid-cols-2 gap-2 sm:flex">
+          <a href={`/api/inspecoes/${i.id}/pdf`} target="_blank" rel="noopener" className={buttonClass("primary", "lg", "col-span-2 sm:h-10")}>
+            <FileDown size={18} /> Relatório PDF
+          </a>
+          {wa && (
+            <a href={wa} target="_blank" rel="noopener noreferrer" className={buttonClass("outline", "lg", "sm:h-10")}>
+              <MessageCircle size={18} /> WhatsApp
+            </a>
+          )}
+          {i.plate && (
+            <Link href={`/veiculos/${i.plate}`} className={buttonClass("outline", "lg", "sm:h-10")}>
+              Histórico do veículo
+            </Link>
+          )}
+        </div>
       </div>
 
-      {damaged.length > 0 && (
-        <section className="card border-brand-red/30 p-5 sm:p-6">
-          <h2 className="display mb-3 flex items-center gap-2 text-lg font-bold text-brand-red">
-            <AlertTriangle size={20} /> Avarias preexistentes ({damaged.length})
-          </h2>
-          <ul className="divide-y divide-line">
-            {damaged.map((d) => (
-              <li key={d.item_key} className="py-2.5">
-                <p className="font-semibold">{d.item_label}</p>
-                <p className="text-sm text-graphite">{d.notes}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section className="card p-5 sm:p-6">
-        <h2 className="display mb-4 text-lg font-bold">Checklist</h2>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {groupItems(items).map((g) => (
-            <div key={g.name}>
-              <h3 className="display mb-2 text-xs font-bold tracking-[0.18em] text-steel">{g.name}</h3>
-              <ul className="divide-y divide-line rounded-xl border border-line">
-                {g.items.map((it) => (
-                  <li key={it.item_key} className="flex items-start justify-between gap-3 px-3 py-2.5">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{it.item_label}</p>
-                      {it.notes && it.status !== "damaged" && <p className="text-xs text-steel">{it.notes}</p>}
-                      {it.item_key === "fuel" && i.fuel_level && (
-                        <p className="text-xs text-steel">Nível: {fuelLabel(i.fuel_level)}</p>
-                      )}
-                    </div>
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        it.status ? STATUS_PILL[it.status] : "bg-paper text-steel"
-                      }`}
-                    >
-                      {it.status ? CHECKLIST_STATUS[it.status].label : "—"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="card p-5 sm:p-6">
-        <h2 className="display mb-4 text-lg font-bold">Fotografias ({photos.length})</h2>
-        {photos.length ? <PhotoGallery groups={galleryGroups} /> : <p className="text-sm text-steel">Nenhuma foto registrada.</p>}
-      </section>
-
-      <section className="card p-5 sm:p-6">
-        <h2 className="display mb-4 text-lg font-bold">Responsáveis</h2>
-        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Info label="Funcionário responsável" value={i.inspector_name} />
-          <Info label="Mecânico responsável" value={i.mechanic_name} />
-          <Info label="Finalizada em" value={formatDateTime(i.finalized_at)} />
-        </dl>
-        {i.notes && (
-          <div className="mt-5">
-            <p className="text-xs font-semibold tracking-wide text-steel uppercase">Observações</p>
-            <p className="mt-1 text-sm whitespace-pre-line">{i.notes}</p>
+      <section aria-label="Resumo" className="panel mt-6 grid grid-cols-2 md:grid-cols-4">
+        {kpis.map((k, idx) => (
+          <div
+            key={k.label}
+            className={`px-4 py-3.5 md:px-5 ${idx % 2 ? "border-l border-border" : ""} ${idx >= 2 ? "border-t border-border md:border-t-0" : ""} ${idx === 2 ? "md:border-l" : ""}`}
+          >
+            <p className="text-sm text-muted">{k.label}</p>
+            <p className={`num mt-1 text-2xl leading-8 font-medium ${k.alert ? "text-accent-ink" : ""}`}>
+              {k.value} {k.unit && <span className="text-sm font-normal text-muted">{k.unit}</span>}
+            </p>
           </div>
-        )}
+        ))}
       </section>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_384px]">
+        <div className="min-w-0 space-y-6">
+          <section className="panel p-5" aria-labelledby="mapa">
+            <h2 id="mapa" className="h2">
+              Estado na entrada
+            </h2>
+            <p className="text-sm text-muted">
+              {damaged.length
+                ? `${damaged.length} avaria${damaged.length > 1 ? "s" : ""} preexistente${damaged.length > 1 ? "s" : ""} em ${items.length} itens conferidos antes do serviço`
+                : `Nenhuma avaria nos ${items.length} itens conferidos antes do serviço`}
+            </p>
+            {/* Mapa (200 px) + checklist em duas colunas de grupos; o mapa e a lista vêm das mesmas linhas. */}
+            <div className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
+              <div className="mx-auto w-40 md:w-auto">
+                <DamageMap statusByKey={statusByKey} />
+                {offMapDamaged.length > 0 && (
+                  <p className="mt-2 text-center text-xs text-muted">Fora do mapa: {offMapDamaged.map((d) => d.item_label).join(", ")}</p>
+                )}
+              </div>
+              <div className="grid min-w-0 grid-cols-1 gap-x-6 gap-y-4 xl:grid-cols-2">
+                {[groups.filter((g) => g.name === "Exterior"), groups.filter((g) => g.name !== "Exterior")].map((col, ci) => (
+                  <div key={ci} className="min-w-0 space-y-4">
+                    {col.map((g) => (
+                      <div key={g.name}>
+                        <h3 className="mb-0.5 text-xs text-muted">{g.name}</h3>
+                        <ul className="divide-y divide-rule">
+                          {g.items.map((it) => (
+                            <li key={it.item_key} className="py-2">
+                              <p className="flex items-baseline justify-between gap-3">
+                                <span className="flex min-w-0 items-center gap-2 text-sm">
+                                  {it.status === "damaged" && <span className="h-2 w-2 flex-none rounded-full bg-accent" aria-hidden="true" />}
+                                  <span className={it.status === "damaged" ? "font-medium" : ""}>{it.item_label}</span>
+                                  {it.item_key === "fuel" && i.fuel_level && <span className="text-muted">· {fuelLabel(i.fuel_level)}</span>}
+                                </span>
+                                <span className={`flex-none text-sm ${it.status ? STATUS_TEXT[it.status] : "text-muted"}`}>
+                                  {it.status ? CHECKLIST_STATUS[it.status].label : "–"}
+                                </span>
+                              </p>
+                              {it.notes && (
+                                <p className={`mt-0.5 text-[13px] ${it.status === "damaged" ? "pl-4 text-ink" : "text-muted"}`}>
+                                  {it.notes}
+                                  {it.status === "damaged" && (photosByItem.get(it.item_key) ?? 0) > 0 && (
+                                    <span className="text-muted">
+                                      {" "}
+                                      · {photosByItem.get(it.item_key)} foto{photosByItem.get(it.item_key) === 1 ? "" : "s"}
+                                    </span>
+                                  )}
+                                </p>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="panel p-5" aria-labelledby="fotos">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 id="fotos" className="h2">
+                Fotografias
+              </h2>
+              <span className="num text-sm text-muted">{photos.length}</span>
+            </div>
+            {missingAngles.length > 0 && (
+              <p className="mt-0.5 text-sm text-muted">Sem foto: {missingAngles.map((m) => m.label.toLowerCase()).join(", ")}.</p>
+            )}
+            <div className="mt-4">
+              {photos.length ? (
+                <PhotoGallery groups={galleryGroups} />
+              ) : (
+                <p className="rounded-card border border-dashed border-control px-4 py-3 text-sm text-muted">Nenhuma foto registrada.</p>
+              )}
+            </div>
+          </section>
+        </div>
+
+        <aside className="min-w-0 space-y-4">
+          <section>
+            <h2 className="h2 mb-2">Veículo</h2>
+            <div className="panel px-4 py-1">
+              <KeyValue
+                rows={[
+                  ["Placa", <span key="p" className="id-type">{formatPlate(i.plate)}</span>],
+                  ["Marca e modelo", vehicleName],
+                  ["Ano", i.year],
+                  ["Cor", i.color],
+                  ["Entrada", formatDateTime(i.started_at)],
+                ]}
+              />
+            </div>
+          </section>
+          <section>
+            <h2 className="h2 mb-2">Proprietário</h2>
+            <div className="panel px-4 py-1">
+              <KeyValue
+                rows={[
+                  ["Nome", i.owner_name],
+                  [
+                    "CPF/CNPJ",
+                    i.owner_document ? (isAdmin ? formatDocument(i.owner_document) : maskDocument(i.owner_document)) : null,
+                  ],
+                  ["Telefone", formatPhone(i.owner_phone)],
+                  ["WhatsApp", formatPhone(i.owner_whatsapp)],
+                ]}
+              />
+            </div>
+          </section>
+          <section>
+            <h2 className="h2 mb-2">Responsáveis</h2>
+            <div className="panel px-4 py-1">
+              <KeyValue
+                rows={[
+                  ["Funcionário", i.inspector_name],
+                  ["Mecânico", i.mechanic_name],
+                  ["Finalizada", formatDateTime(i.finalized_at)],
+                ]}
+              />
+              {i.notes && (
+                <div className="border-t border-rule py-3">
+                  <p className="text-sm text-muted">Observações</p>
+                  <p className="mt-1 text-sm whitespace-pre-line">{i.notes}</p>
+                </div>
+              )}
+            </div>
+          </section>
+        </aside>
+      </div>
     </main>
   );
 }

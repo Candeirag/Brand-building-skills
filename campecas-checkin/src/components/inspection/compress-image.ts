@@ -21,7 +21,7 @@ async function loadImage(file: File): Promise<{ source: CanvasImageSource; width
 
 /**
  * Redimensiona e converte a foto para JPEG (reduz o consumo de dados móveis e
- * de armazenamento) e grava uma marca com placa, data e hora — evidência do
+ * de armazenamento) e grava uma marca com placa, data e hora: evidência do
  * estado do veículo no momento da entrada.
  */
 export async function compressImage(file: File, stamp?: string): Promise<CompressedImage> {

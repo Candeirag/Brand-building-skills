@@ -1,6 +1,7 @@
 import { Document, Image, Page, Path, Rect, StyleSheet, Svg, Text, View } from "@react-pdf/renderer";
 import { CHECKLIST_STATUS, fuelLabel, groupItems } from "@/lib/checklist";
 import { formatDateTime, formatKm, formatPhone, formatPlate, maskDocument } from "@/lib/format";
+import { BODY_PATH, MAP_VIEWBOX, MAP_ZONES, ROOF_RECT, ZONE_STYLE, zoneState } from "@/lib/damage-map";
 import { PHOTO_CATEGORIES } from "@/lib/photos";
 import type { Tables } from "@/lib/supabase/database.types";
 
@@ -84,7 +85,7 @@ function Field({ label, value, wide }: { label: string; value: string | number |
   return (
     <View style={wide ? s.cellWide : s.cell}>
       <Text style={s.label}>{label}</Text>
-      <Text style={s.value}>{value === null || value === undefined || value === "" ? "—" : String(value)}</Text>
+      <Text style={s.value}>{value === null || value === undefined || value === "" ? "–" : String(value)}</Text>
     </View>
   );
 }
@@ -96,6 +97,52 @@ function LogoMark() {
       <Path d="M14 40 L26 18 H50 L44 28 H32 L28 36 H40 L34 46 H14 Z" fill="#ffffff" />
       <Path d="M38 46 L52 22" stroke={C.ink} strokeWidth={5} strokeLinecap="round" />
     </Svg>
+  );
+}
+
+/** Mapa de avarias no laudo (mesma geometria e cores da tela). */
+function DamageMapPdf({ statusByKey }: { statusByKey: Record<string, Tables<"inspection_items">["status"]> }) {
+  const w = 92;
+  const h = (w * MAP_VIEWBOX.height) / MAP_VIEWBOX.width;
+  return (
+    <View style={{ width: w, alignItems: "center" }}>
+      <Svg width={w} height={h} viewBox={`0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}>
+        <Path d={BODY_PATH} fill="#ffffff" stroke="#d4cfcf" strokeWidth={1.5} />
+        <Rect x={ROOF_RECT.x} y={ROOF_RECT.y} width={ROOF_RECT.w} height={ROOF_RECT.h} rx={ROOF_RECT.r} fill="#f6f2f2" />
+        {MAP_ZONES.flatMap((z) => {
+          const st = ZONE_STYLE[zoneState(z, statusByKey)];
+          return z.shapes.map((shape, idx) =>
+            shape.kind === "rect" ? (
+              <Rect
+                key={`${z.id}-${idx}`}
+                x={shape.x}
+                y={shape.y}
+                width={shape.w}
+                height={shape.h}
+                rx={shape.r ?? 0}
+                fill={st.fill}
+                stroke={st.stroke}
+                strokeWidth={1.5}
+                strokeDasharray={st.dashed ? "3 2" : undefined}
+              />
+            ) : (
+              <Path
+                key={`${z.id}-${idx}`}
+                d={shape.d}
+                fill={st.fill}
+                stroke={st.stroke}
+                strokeWidth={1.5}
+                strokeDasharray={st.dashed ? "3 2" : undefined}
+              />
+            ),
+          );
+        })}
+      </Svg>
+      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+        <View style={{ width: 6, height: 6, backgroundColor: ZONE_STYLE.damaged.fill, borderRadius: 1, marginRight: 3 }} />
+        <Text style={{ fontSize: 6.5, color: C.steel }}>Avariado</Text>
+      </View>
+    </View>
   );
 }
 
@@ -116,7 +163,7 @@ export function InspectionReport({ inspection: i, items, photos, generatedAt }: 
 
   return (
     <Document
-      title={`Inspeção ${i.number ?? "rascunho"} — ${formatPlate(i.plate)}`}
+      title={`Inspeção ${i.number ?? "rascunho"}: ${formatPlate(i.plate)}`}
       author="CAMPEÇAS"
       subject="Relatório de inspeção de entrada de veículo"
       creator="CAMPEÇAS CHECK-IN"
@@ -142,7 +189,7 @@ export function InspectionReport({ inspection: i, items, photos, generatedAt }: 
         <View style={{ height: 14 }} fixed />
 
         <View style={s.body}>
-          {isDraft && <Text style={s.draft}>RASCUNHO — INSPEÇÃO AINDA NÃO FINALIZADA</Text>}
+          {isDraft && <Text style={s.draft}>RASCUNHO: INSPEÇÃO AINDA NÃO FINALIZADA</Text>}
 
           <View style={s.section} wrap={false}>
             <Text style={s.sectionTitle}>Veículo</Text>
@@ -201,23 +248,28 @@ export function InspectionReport({ inspection: i, items, photos, generatedAt }: 
 
           <View style={s.section}>
             <Text style={s.sectionTitle}>Avarias preexistentes</Text>
-            {damaged.length === 0 ? (
-              <Text style={s.noDamage}>Nenhuma avaria registrada no momento da entrada.</Text>
-            ) : (
-              damaged.map((d) => (
-                <View key={d.item_key} style={s.damageBox} wrap={false}>
-                  <Text style={s.damageTitle}>{d.item_label}</Text>
-                  <Text style={s.damageText}>{d.notes}</Text>
-                </View>
-              ))
-            )}
-            {items
-              .filter((it) => it.status !== "damaged" && it.notes)
-              .map((it) => (
-                <Text key={it.item_key} style={[s.damageText, { marginTop: 3 }]}>
-                  • {it.item_label}: {it.notes}
-                </Text>
-              ))}
+            <View style={{ flexDirection: "row", gap: 16 }} wrap={false}>
+              <DamageMapPdf statusByKey={Object.fromEntries(items.map((it) => [it.item_key, it.status]))} />
+              <View style={{ flex: 1 }}>
+                {damaged.length === 0 ? (
+                  <Text style={s.noDamage}>Nenhuma avaria registrada no momento da entrada.</Text>
+                ) : (
+                  damaged.map((d) => (
+                    <View key={d.item_key} style={s.damageBox} wrap={false}>
+                      <Text style={s.damageTitle}>{d.item_label}</Text>
+                      <Text style={s.damageText}>{d.notes}</Text>
+                    </View>
+                  ))
+                )}
+                {items
+                  .filter((it) => it.status !== "damaged" && it.notes)
+                  .map((it) => (
+                    <Text key={it.item_key} style={[s.damageText, { marginTop: 3 }]}>
+                      • {it.item_label}: {it.notes}
+                    </Text>
+                  ))}
+              </View>
+            </View>
           </View>
 
           {i.notes && (
