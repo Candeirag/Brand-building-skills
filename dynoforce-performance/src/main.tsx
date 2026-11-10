@@ -4,6 +4,7 @@ import '@fontsource-variable/jetbrains-mono';
 import '@fontsource-variable/saira/wdth.css';
 import '@fontsource-variable/saira/wdth-italic.css';
 import './styles/globals.css';
+import { inject } from '@vercel/analytics';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
@@ -27,6 +28,10 @@ if (icon) {
   icon.href = brand.logoImage ? 'favicon.png' : 'favicon.svg';
 }
 document.title = `${brand.name} — Remap e dinamômetro`;
+
+// Contagem de visitas da Vercel (Web Analytics): sem cookies e sem dados
+// pessoais. Só registra algo quando o Web Analytics está ligado no projeto.
+inject();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
