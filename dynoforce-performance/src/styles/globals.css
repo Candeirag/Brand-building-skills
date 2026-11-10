@@ -1,0 +1,225 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: #f5f5f5;
+  --color-void: #050505;
+  --color-graphite: #111111;
+  --color-steel: #1a1a1b;
+  --color-tech: #888888;
+  --color-accent: var(--brand-accent);
+  --color-accent-deep: var(--brand-accent-deep);
+  --color-on-accent: var(--brand-on-accent);
+
+  --font-display: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+:root {
+  --brand-accent: #e10600;
+  --brand-accent-deep: #b80500;
+  --brand-on-accent: #f5f5f5;
+  /* Margem externa única da página: tudo alinha nela. */
+  --gutter: clamp(20px, 4vw, 64px);
+  --header-h: 72px;
+}
+
+html {
+  background: #050505;
+  color: #f5f5f5;
+  -webkit-text-size-adjust: 100%;
+  scrollbar-color: #2a2a2a #050505;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.55;
+  background: #050505;
+  color: #f5f5f5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--brand-accent);
+  color: var(--brand-on-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 3px;
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+@layer components {
+  .gutter {
+    padding-inline: var(--gutter);
+  }
+
+  .display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 0.92;
+    text-transform: uppercase;
+  }
+
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'zero' 0;
+  }
+
+  /* Rótulo técnico: usado só dentro de instrumentos (HUD, gráficos, tabelas). */
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-height: 52px;
+    padding: 0 26px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    overflow: hidden;
+    isolation: isolate;
+    transition:
+      color 0.35s var(--ease-out-expo),
+      transform 0.2s var(--ease-out-expo);
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  /* Preenchimento que varre o botão, como uma barra de rotação subindo. */
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.45s var(--ease-out-expo);
+  }
+  .btn:hover::before,
+  .btn:focus-visible::before {
+    transform: scaleX(1);
+  }
+  .btn-primary {
+    background: var(--brand-accent);
+    color: var(--brand-on-accent);
+  }
+  .btn-primary::before {
+    background: #f5f5f5;
+  }
+  .btn-primary:hover,
+  .btn-primary:focus-visible {
+    color: #050505;
+  }
+  .btn-ghost {
+    background: rgba(245, 245, 245, 0.09);
+    color: #f5f5f5;
+  }
+  .btn-ghost::before {
+    background: #f5f5f5;
+  }
+  .btn-ghost:hover,
+  .btn-ghost:focus-visible {
+    color: #050505;
+  }
+  .btn .btn-arrow {
+    transition: transform 0.35s var(--ease-out-expo);
+  }
+  .btn:hover .btn-arrow {
+    transform: translateX(5px);
+  }
+
+  /* Link de texto com sublinhado que entra pela esquerda. */
+  .link {
+    position: relative;
+    display: inline-block;
+  }
+  .link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -4px;
+    height: 2px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.4s var(--ease-out-expo);
+  }
+  .link:hover::after,
+  .link:focus-visible::after,
+  .link[aria-current='true']::after {
+    transform: scaleX(1);
+  }
+}
+
+/* Entrada das seções: só existe com JS e sem preferência por menos movimento. */
+html.motion-ok [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes scroll-hint {
+  0% {
+    transform: translateY(-100%);
+  }
+  60%,
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
