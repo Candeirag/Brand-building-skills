@@ -13,7 +13,7 @@ import { elapsed } from "@/lib/time";
 import { plural } from "@/lib/plural";
 
 /*
- * Pergunta da tela: "Quais carros do pátio estão com inspeção aberta, e o que entrou hoje?"
+ * Pergunta da tela: "Quais carros estão no pátio agora, há quanto tempo, e o que entrou hoje?"
  * Maior bloco: a lista "No pátio". Grid desktop: 1fr + coluna de 384 px, vão de 24 px.
  * Na área de 1136 px (1440 - 240 - 2x32): 728 + 24 + 384 = 1136.
  */
@@ -27,10 +27,13 @@ export default async function DashboardPage() {
   const todayStart = startOfDaySaoPaulo(today);
   const monthStart = startOfDaySaoPaulo(`${today.slice(0, 7)}-01`);
 
-  const [todayRes, olderDraftsRes, openRes, monthRes, vehiclesRes] = await Promise.all([
+  const [todayRes, yardRes, yardCountRes, oldestDraftRes, openRes, monthRes, vehiclesRes] = await Promise.all([
     // Rascunhos vazios (is_blank) não contam: ficam fora das listas e das contagens.
     supabase.from("inspections").select(INSPECTION_ROW_SELECT).eq("is_blank", false).gte("started_at", todayStart).order("started_at", { ascending: false }).limit(100),
-    supabase.from("inspections").select(INSPECTION_ROW_SELECT).eq("status", "draft").eq("is_blank", false).lt("started_at", todayStart).order("started_at").limit(LIST_LIMIT),
+    // No pátio = sem saída registrada (rascunhos e finalizadas), do mais antigo para o mais novo.
+    supabase.from("inspections").select(INSPECTION_ROW_SELECT).eq("is_blank", false).is("yard_exits", null).order("started_at").limit(LIST_LIMIT),
+    supabase.from("inspections").select("id, yard_exits(inspection_id)", { count: "exact", head: true }).eq("is_blank", false).is("yard_exits", null),
+    supabase.from("inspections").select("started_at").eq("status", "draft").eq("is_blank", false).order("started_at").limit(1).maybeSingle(),
     supabase.from("inspections").select("id", { count: "exact", head: true }).eq("status", "draft").eq("is_blank", false),
     supabase.from("inspections").select("id", { count: "exact", head: true }).eq("status", "finalized").gte("finalized_at", monthStart),
     supabase.from("vehicles").select("id, plate, brand, model, last_mileage, updated_at").order("updated_at", { ascending: false }).limit(5),
@@ -38,26 +41,22 @@ export default async function DashboardPage() {
 
   // Um fato, uma variável: tudo que fala de "hoje" sai destas linhas.
   const todayRows = (todayRes.data ?? []).map(toRowData);
-  const olderDrafts = (olderDraftsRes.data ?? []).map(toRowData);
+  const yard: InspectionRowData[] = (yardRes.data ?? []).map(toRowData);
+  const yardTotal = yardCountRes.count ?? yard.length;
+  const hidden = Math.max(0, yardTotal - yard.length);
   const todayWithDamage = todayRows.filter((r) => r.damages > 0).length;
   const openTotal = openRes.count ?? 0;
 
-  const drafts = [...olderDrafts, ...todayRows.filter((r) => r.status === "draft")].sort(
-    (a, b) => +new Date(a.started_at) - +new Date(b.started_at),
-  );
-  const finalizedToday = todayRows
-    .filter((r) => r.status === "finalized")
-    .sort((a, b) => +new Date(b.finalized_at!) - +new Date(a.finalized_at!));
-  const yard: InspectionRowData[] = [...drafts, ...finalizedToday].slice(0, LIST_LIMIT);
-  const hidden = drafts.length + finalizedToday.length - yard.length;
-
-  const oldest = drafts[0];
+  const oldest = oldestDraftRes.data;
   const finding =
     openTotal > 0 && oldest
       ? openTotal === 1
         ? `1 em andamento · aberta ${elapsed(oldest.started_at, now)}`
         : `${openTotal} em andamento · mais antiga ${elapsed(oldest.started_at, now)}`
       : "Nenhuma inspeção aberta";
+  const yardCaption = yard.length
+    ? `${plural(yardTotal, "carro", "carros")} · o mais antigo entrou ${elapsed(yard[0]!.started_at, now)}`
+    : "Nenhum carro no pátio";
 
   const kpis = [
     { label: "Entradas hoje", value: todayRows.length, caption: "desde 00:00" },
@@ -104,12 +103,10 @@ export default async function DashboardPage() {
             <header className="flex items-center justify-between gap-3 px-4 py-3.5">
               <div>
                 <h2 id="patio" className="h2">No pátio</h2>
-                <p className="text-xs text-muted">
-                  Abertas primeiro (da mais antiga), depois as finalizadas hoje
-                </p>
+                <p className="text-xs text-muted">{yardCaption} · o tempo corre até registrar a saída</p>
               </div>
               <Link href="/historico?periodo=hoje" className="flex-none text-sm font-medium text-ink hover:underline">
-                Ver todas
+                Entradas de hoje
               </Link>
             </header>
             {yard.length ? (
@@ -122,15 +119,15 @@ export default async function DashboardPage() {
                 </ul>
                 {hidden > 0 && (
                   <p className="border-t border-rule px-4 py-2.5 text-sm text-muted">
-                    Mais {hidden} no{" "}
-                    <Link href="/historico?periodo=hoje" className="font-medium text-ink hover:underline">
-                      histórico de hoje
+                    Mais {plural(hidden, "carro", "carros")} no pátio. Veja no{" "}
+                    <Link href="/historico" className="font-medium text-ink hover:underline">
+                      histórico
                     </Link>
                   </p>
                 )}
               </>
             ) : (
-              <EmptyState title="Nenhum veículo no pátio hoje.">Toque em Nova inspeção quando o próximo carro chegar.</EmptyState>
+              <EmptyState title="Nenhum veículo no pátio.">Toque em Nova inspeção quando o próximo carro chegar.</EmptyState>
             )}
           </section>
         </div>

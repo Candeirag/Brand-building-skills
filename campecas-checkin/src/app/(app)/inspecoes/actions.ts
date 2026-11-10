@@ -111,6 +111,30 @@ export async function registerReportSent(inspectionId: string): Promise<{ ok: tr
   return { ok: true, sentAt: data };
 }
 
+/** Registra a saída do veículo do pátio (para o temporizador). */
+export async function registerVehicleExit(
+  inspectionId: string,
+): Promise<{ ok: true; exitedAt: string } | { ok: false; error: string }> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("register_vehicle_exit", { p_inspection_id: inspectionId });
+  if (error || !data) return { ok: false, error: friendlyError(error, "Não foi possível registrar a saída.") };
+  revalidatePath(`/inspecoes/${inspectionId}`);
+  revalidatePath("/");
+  return { ok: true, exitedAt: data };
+}
+
+/** Desfaz uma saída registrada por engano (o temporizador volta a correr). */
+export async function undoVehicleExit(inspectionId: string): Promise<ActionResult> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("undo_vehicle_exit", { p_inspection_id: inspectionId });
+  if (error) return { ok: false, error: friendlyError(error, "Não foi possível desfazer a saída.") };
+  revalidatePath(`/inspecoes/${inspectionId}`);
+  revalidatePath("/");
+  return { ok: true };
+}
+
 /** Revoga o link público do laudo (ele deixa de abrir na hora). */
 export async function revokeReportLink(inspectionId: string): Promise<ActionResult> {
   await requireStaff();

@@ -398,4 +398,34 @@ select tests.ok((select role from public.profiles where id = '00000000-0000-0000
   'administrador altera a função de outro funcionário');
 reset role;
 
+-- Saída do pátio --------------------------------------------------------------------
+set role authenticated;
+select tests.as_user('00000000-0000-0000-0000-00000000000b');
+insert into public.inspections (id, plate) values ('44444444-4444-4444-4444-444444444444', 'DEF4G56');
+select tests.throws($$select public.register_vehicle_exit('44444444-4444-4444-4444-444444444444')$$,
+  'Finalize a inspeção', 'rascunho não registra saída');
+select tests.ok(public.register_vehicle_exit('33333333-3333-3333-3333-333333333333') is not null,
+  'saída registrada para inspeção finalizada');
+select tests.ok((select exited_by_name from public.yard_exits
+  where inspection_id = '33333333-3333-3333-3333-333333333333') = 'Ana Recepção', 'saída guarda quem registrou');
+select tests.throws($$select public.register_vehicle_exit('33333333-3333-3333-3333-333333333333')$$,
+  'já foi registrada', 'saída não é registrada duas vezes');
+select tests.throws($$insert into public.yard_exits (inspection_id) values ('11111111-1111-1111-1111-111111111111')$$,
+  'permission denied', 'saída só é gravada pela função');
+select public.undo_vehicle_exit('33333333-3333-3333-3333-333333333333');
+select tests.ok(not exists(select 1 from public.yard_exits where inspection_id = '33333333-3333-3333-3333-333333333333'),
+  'saída registrada por engano pode ser desfeita');
+select tests.ok(public.register_vehicle_exit('33333333-3333-3333-3333-333333333333') is not null,
+  'saída pode ser registrada de novo depois de desfeita');
+select tests.ok((select status from public.inspections where id = '33333333-3333-3333-3333-333333333333') = 'finalized',
+  'inspeção finalizada continua inalterada');
+reset role;
+select tests.ok((select count(*) from public.audit_log where action in ('vehicle.exited', 'vehicle.exit_undone')) = 3,
+  'saídas e desfazimentos ficam na auditoria');
+set role anon;
+select tests.throws('select * from public.yard_exits', 'permission denied', 'anon não lê saídas do pátio');
+select tests.throws($$select public.register_vehicle_exit('11111111-1111-1111-1111-111111111111')$$,
+  'permission denied', 'anon não registra saída');
+reset role;
+
 \echo 'Todos os testes do banco passaram.'

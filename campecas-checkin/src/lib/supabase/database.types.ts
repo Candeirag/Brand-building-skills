@@ -397,6 +397,25 @@ export type Database = {
           },
         ];
       };
+      yard_exits: {
+        Row: {
+          inspection_id: string;
+          exited_at: string;
+          exited_by: string | null;
+          exited_by_name: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "yard_exits_inspection_id_fkey";
+            columns: ["inspection_id"];
+            isOneToOne: true;
+            referencedRelation: "inspections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       audit_log: {
         Row: {
           id: number;
@@ -439,6 +458,8 @@ export type Database = {
       revoke_report_link: { Args: { p_inspection_id: string }; Returns: number };
       register_report_delivery: { Args: { p_inspection_id: string }; Returns: string };
       public_report: { Args: { p_token: string; p_server_key: string }; Returns: Json };
+      register_vehicle_exit: { Args: { p_inspection_id: string }; Returns: string };
+      undo_vehicle_exit: { Args: { p_inspection_id: string }; Returns: undefined };
     };
     Enums: {
       user_role: "admin" | "inspector" | "mechanic";

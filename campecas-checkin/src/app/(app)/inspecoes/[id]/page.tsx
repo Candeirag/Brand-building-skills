@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CheckCircle2, FileDown } from "lucide-react";
 import { ReportShare } from "@/components/inspection/report-share";
+import { YardExitPanel } from "@/components/inspection/yard-exit-panel";
 import { createClient } from "@/lib/supabase/server";
 import { pickContactNumber } from "@/lib/whatsapp";
 import { NewInspectionButton } from "@/components/inspection/new-inspection-button";
@@ -87,7 +88,7 @@ export default async function InspectionPage({
 
   // Laudo do cliente: link ativo (se houver) e último envio pelo WhatsApp.
   const supabase = await createClient();
-  const [linkRes, deliveryRes] = await Promise.all([
+  const [linkRes, deliveryRes, exitRes] = await Promise.all([
     supabase
       .from("report_links")
       .select("token, expires_at")
@@ -104,7 +105,9 @@ export default async function InspectionPage({
       .order("sent_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase.from("yard_exits").select("exited_at, exited_by_name").eq("inspection_id", id).maybeSingle(),
   ]);
+  const renderedAt = new Date();
   const isAdmin = profile.role === "admin";
   const vehicleName = [i.brand, i.model].filter(Boolean).join(" ");
 
@@ -173,6 +176,13 @@ export default async function InspectionPage({
         message={{ ownerName: i.owner_name, brand: i.brand, model: i.model, plate: i.plate, registeredAt: i.started_at }}
         activeLink={linkRes.data ? { token: linkRes.data.token, expiresAt: linkRes.data.expires_at } : null}
         lastDelivery={deliveryRes.data ? { sentAt: deliveryRes.data.sent_at, sentBy: deliveryRes.data.sent_by_name } : null}
+      />
+
+      <YardExitPanel
+        inspectionId={i.id}
+        startedAt={i.started_at}
+        exit={exitRes.data ? { exitedAt: exitRes.data.exited_at, exitedBy: exitRes.data.exited_by_name } : null}
+        nowMs={renderedAt.getTime()}
       />
 
       <section aria-label="Resumo" className="panel mt-6 grid grid-cols-2 md:grid-cols-4">

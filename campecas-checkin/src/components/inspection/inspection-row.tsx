@@ -4,7 +4,7 @@ import { DamageCount, StatusBadge } from "@/components/ui/status-badge";
 import { Plate } from "@/components/ui/plate";
 import { formatDate, formatNumber, formatTime, isoDateInSaoPaulo } from "@/lib/format";
 import type { InspectionRowData } from "@/lib/queries";
-import { elapsed } from "@/lib/time";
+import { YardTimer } from "./yard-timer";
 
 /*
  * Tabela de inspeções: fios e alinhamento, sem zebra e sem faixa no cabeçalho.
@@ -33,7 +33,7 @@ export function InspectionRow({ item, now }: { item: InspectionRowData; now: Dat
   const when = item.finalized_at ?? item.started_at;
   const today = isoDateInSaoPaulo(new Date(when)) === isoDateInSaoPaulo(now);
   const secondary = draft
-    ? `${item.inspector_name ?? "–"} · aberta ${elapsed(item.started_at, now)}`
+    ? (item.inspector_name ?? "–")
     : `${item.owner_name ?? "Proprietário não informado"} · ${item.number}${
         item.lastSentAt ? ` · laudo enviado em ${formatDate(item.lastSentAt)} às ${formatTime(item.lastSentAt)}` : ""
       }`;
@@ -44,7 +44,13 @@ export function InspectionRow({ item, now }: { item: InspectionRowData; now: Dat
         <Plate value={item.plate} size="sm" />
 
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium">{vehicle}</p>
+          <p className="flex min-w-0 items-center gap-2">
+            <span className="truncate font-medium">{vehicle}</span>
+            <YardTimer startedAt={item.started_at} exitedAt={item.exitedAt} nowMs={now.getTime()} className="hidden md:inline-flex" />
+          </p>
+          <p className="mt-0.5 md:hidden">
+            <YardTimer startedAt={item.started_at} exitedAt={item.exitedAt} nowMs={now.getTime()} />
+          </p>
           <p className="flex min-w-0 items-center gap-2 text-[13px] text-muted">
             {draft && <StatusBadge status="draft" />}
             <span className="truncate">
