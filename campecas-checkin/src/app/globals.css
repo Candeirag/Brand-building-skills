@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/*
+ * CHECK-IN MINEIROCAR Auto Center: estilo "accent ladder" (direção de arte, seed 1386293280)
+ * Cores da logo: vermelho #EC3237, azul #36478D e grafite #312F30.
+ * O vermelho é o matiz de ação e de avaria: cheio apenas em marcas pequenas (avarias, ícone ativo,
+ * o único botão principal), num tom um pouco mais fechado (#D9262D) para o texto branco ter contraste;
+ * os tons claros dele fazem o trabalho de área. O azul da marca vai para as superfícies escuras
+ * (cabeçalho do laudo, painel do login, ícone) e puxa os neutros para o frio.
+ * Chrome claro, superfícies chapadas: borda de 1 px OU degrau de tom, nunca sombra em repouso.
+ * Raio fechado: card 8 / controle 6 / chip 4.
+ */
+@theme {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+
+  /* Superfícies (fundo um degrau tingido em direção ao azul da marca) */
+  --color-ground: #f7f8fb;
+  --color-surface: #ffffff;
+  --color-raised: #f1f3f8;
+  --color-active: #fdeced;
+
+  /* Escada do matiz (vermelho MineiroCar) */
+  --color-tint: #fdeced;
+  --color-tint-2: #f7c9cb;
+  --color-accent: #d9262d;
+  --color-accent-ink: #a51d23;
+  --color-accent-on-dark: #ff7b80; /* mesmo matiz, legível sobre o azul-escuro */
+
+  /* Azul da marca */
+  --color-brand: #36478d;
+  --color-brand-deep: #1c2340;
+
+  /* Linhas em três degraus */
+  --color-border: #e4e7ef;
+  --color-rule: #eef0f5;
+  --color-control: #cdd2dd;
+  --color-dash: #dde1ea;
+
+  /* Texto em três níveis (todos >= 4,5:1 sobre o fundo) */
+  --color-ink: #1f2433;
+  --color-muted: #5a6070;
+  --color-faint: #686e7e;
+  --color-primary: #1f2433;
+
+  /* Status */
+  --color-positive: #247b50;
+  --color-positive-bg: #dcfae5;
+  --color-positive-ink: #04250e;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fde68a;
+  --color-warning-ink: #92400e;
+
+  /* Placa Mercosul (objeto do produto) */
+  --color-plate-band: #1f4fa3;
+
+  --font-sans: var(--font-barlow), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace; /* taste-skill-ignore: só em .id-type */
+
+  --radius-card: 8px;
+  --radius-control: 6px;
+  --radius-chip: 4px;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Campos com 16 px evitam o zoom automático do iOS */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+@layer components {
+  .field-label {
+    @apply mb-2 block text-sm font-medium text-ink;
+  }
+  .field-input {
+    @apply block h-11 w-full rounded-control border border-control bg-surface px-3 text-base text-ink transition outline-none placeholder:text-faint focus:border-ink focus:ring-3 focus:ring-ink/10 disabled:bg-raised disabled:text-muted aria-invalid:border-accent aria-invalid:ring-accent/15;
+  }
+  .field-textarea {
+    @apply block min-h-24 w-full rounded-control border border-control bg-surface px-3 py-2.5 text-base text-ink transition outline-none placeholder:text-faint focus:border-ink focus:ring-3 focus:ring-ink/10;
+  }
+  .panel {
+    @apply rounded-card border border-border bg-surface;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Identificadores (placa, nº da inspeção, senha provisória): regra de app "mono só para IDs". */
+  .id-type {
+    font-family: var(--font-mono); /* taste-skill-ignore: identificadores */
+    font-variant-numeric: tabular-nums;
+  }
+  .h1 {
+    @apply text-2xl leading-8 font-semibold text-ink;
+  }
+  .h2 {
+    @apply text-base leading-6 font-semibold text-ink;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
