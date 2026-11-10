@@ -6,16 +6,17 @@
  * componente tem dados da empresa escritos à mão.
  *
  * Há dois presets de marca:
+ *  - `gpgarage`:  GP Garage Performance — a marca padrão. Identidade do logo:
+ *                 preto, turquesa do anel, prata escovada e letreiro itálico.
  *  - `dynoforce`: a marca fictícia DYNOFORCE PERFORMANCE (vermelho).
- *  - `gpgarage`:  a GP Garage Performance (turquesa/prata, logo e textos reais).
  *
  * Para trocar a marca ativa: mude `DEFAULT_BRAND`, defina `VITE_BRAND` no
- * build, ou abra o site com `?brand=gpgarage` para pré-visualizar.
+ * build, ou abra o site com `?brand=dynoforce` para pré-visualizar.
  */
 
 export type BrandId = 'dynoforce' | 'gpgarage';
 
-export const DEFAULT_BRAND: BrandId = 'dynoforce';
+export const DEFAULT_BRAND: BrandId = 'gpgarage';
 
 export interface ServiceItem {
   id: string;
@@ -67,6 +68,20 @@ export interface BrandConfig {
     accentDeep: string;
     /** Texto sobre a cor de destaque. */
     onAccent: string;
+    /** Cor do texto principal. */
+    ink: string;
+  };
+  /** Tipografia dos títulos. */
+  type: {
+    /** Família (precisa estar importada em main.tsx). */
+    display: string;
+    italic: boolean;
+    /** Largura da fonte variável, em % (100 = normal). */
+    stretch: number;
+    weight: number;
+    tracking: string;
+    /** Títulos grandes em degradê de prata escovada, como as letras do logo. */
+    metallic: boolean;
   };
   contact: {
     /**
@@ -124,7 +139,15 @@ const brands: Record<BrandId, BrandConfig> = {
     heroSub:
       'Remap profissional, engenharia de performance e testes em dinamômetro. Mais potência, precisão e desempenho com responsabilidade.',
     tagline: 'ENGINEERING POWER.',
-    colors: { accent: '#E10600', accentDeep: '#B80500', onAccent: '#F5F5F5' },
+    colors: { accent: '#E10600', accentDeep: '#B80500', onAccent: '#F5F5F5', ink: '#F5F5F5' },
+    type: {
+      display: "'Space Grotesk Variable', 'Space Grotesk'",
+      italic: false,
+      stretch: 100,
+      weight: 700,
+      tracking: '-0.035em',
+      metallic: false,
+    },
     contact: {
       whatsappPhone: '5511999999999',
       whatsappIsPlaceholder: true,
@@ -154,7 +177,16 @@ const brands: Record<BrandId, BrandConfig> = {
     heroSub:
       'Referência em performance e soluções automotivas em Taguatinga Sul: dinamômetro, remap, soluções eletrônicas e manutenção especializada.',
     tagline: 'TECNOLOGIA, PERFORMANCE E CONFIANÇA.',
-    colors: { accent: '#6ED0CE', accentDeep: '#4FB3B1', onAccent: '#050505' },
+    // Turquesa medido no anel do logo; prata medida nas letras "GP".
+    colors: { accent: '#72C5C7', accentDeep: '#55A9AB', onAccent: '#050505', ink: '#ECEDEE' },
+    type: {
+      display: "'Saira Variable', 'Saira'",
+      italic: true,
+      stretch: 101,
+      weight: 800,
+      tracking: '-0.018em',
+      metallic: true,
+    },
     contact: {
       whatsappPhone: '5561999999999',
       whatsappIsPlaceholder: true,
@@ -203,6 +235,12 @@ function resolveBrand(): BrandId {
 }
 
 export const brand: BrandConfig = brands[resolveBrand()];
+
+/**
+ * Imagens da cena (poster do hero, serviços, sobre, CTA) existem por marca,
+ * porque foram renderizadas com as luzes e o letreiro de cada uma.
+ */
+export const brandImage = (file: string) => `images/${brand.id}/${file}`;
 
 export const navLinks = [
   { id: 'inicio', label: 'INÍCIO' },

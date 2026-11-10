@@ -9,13 +9,32 @@ import { dyno } from '../state/dynoStore';
 const WALL_Z = -9;
 const CEILING_Y = 4.6;
 
-/** Letreiro luminoso da parede do fundo, desenhado com a fonte do site. */
-function useSignTexture(): THREE.CanvasTexture | null {
-  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
+/**
+ * Letreiro luminoso da parede do fundo. Com logo em imagem, é o próprio logo;
+ * sem, o nome é desenhado com a fonte do site.
+ */
+function useSignTexture(): THREE.Texture | null {
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    let created: THREE.CanvasTexture | null = null;
+    let created: THREE.Texture | null = null;
+    if (brand.logoImage) {
+      new THREE.TextureLoader().load(brand.logoImage, (loaded) => {
+        if (cancelled) {
+          loaded.dispose();
+          return;
+        }
+        loaded.colorSpace = THREE.SRGBColorSpace;
+        loaded.anisotropy = 8;
+        created = loaded;
+        setTexture(loaded);
+      });
+      return () => {
+        cancelled = true;
+        created?.dispose();
+      };
+    }
     const draw = () => {
       if (cancelled) return;
       const canvas = document.createElement('canvas');
@@ -27,9 +46,9 @@ function useSignTexture(): THREE.CanvasTexture | null {
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.font = '700 230px "Space Grotesk Variable", "Space Grotesk", system-ui, sans-serif';
+      ctx.font = `700 230px ${brand.type.display}, system-ui, sans-serif`;
       ctx.fillText(brand.wordmark.primary, canvas.width / 2, 150, canvas.width - 80);
-      ctx.font = '500 64px "Space Grotesk Variable", "Space Grotesk", system-ui, sans-serif';
+      ctx.font = `500 64px ${brand.type.display}, system-ui, sans-serif`;
       const sub = brand.wordmark.secondary.split('').join('  ');
       ctx.fillText(sub, canvas.width / 2, 322, canvas.width - 80);
       created = new THREE.CanvasTexture(canvas);
@@ -219,7 +238,7 @@ export function Workshop({ accent, quality }: WorkshopProps) {
     const white = 0.05 + 2.4 * s.energy;
     for (const tube of tubes.current) tube.color.setScalar(white);
     wallLed.current?.color.copy(accentColor).multiplyScalar(0.45 + 2.2 * s.energy + s.peak);
-    signMaterial.current?.color.setScalar(0.16 + 0.95 * s.energy);
+    signMaterial.current?.color.setScalar((brand.logoImage ? 0.3 : 0.16) + 0.95 * s.energy);
   });
 
   const tubeXs = [-2.6, -0.9, 0.9, 2.6];
@@ -288,8 +307,8 @@ export function Workshop({ accent, quality }: WorkshopProps) {
 
       {/* Letreiro */}
       {sign && (
-        <mesh position={[0, 2.75, WALL_Z + 0.26]}>
-          <planeGeometry args={[7.4, 1.39]} />
+        <mesh position={[0, brand.logoImage ? 2.72 : 2.75, WALL_Z + 0.26]}>
+          <planeGeometry args={brand.logoImage ? [3.1, 3.1] : [7.4, 1.39]} />
           <meshBasicMaterial
             ref={signMaterial}
             map={sign}

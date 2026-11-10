@@ -140,11 +140,11 @@ export function Contact() {
   return (
     <section id="contato" aria-labelledby="contato-titulo" className="gutter py-[120px] lg:py-[200px]">
       <div className="grid gap-14 lg:grid-cols-12 lg:gap-10">
-        <div className="lg:col-span-5">
+        <div className="min-w-0 lg:col-span-5">
           <Heading
             id="contato-titulo"
             lines={['Agende', 'sua sessão.']}
-            className="text-[clamp(44px,12vw,72px)] lg:text-[clamp(60px,6.4vw,118px)]"
+            className="text-[clamp(40px,11.2vw,72px)] lg:text-[clamp(52px,5.5vw,104px)]"
           />
           <p data-reveal className="mt-7 max-w-[25em] text-[17px] text-ink lg:mt-10 lg:text-[19px]">
             Preencha os dados do carro e o WhatsApp abre com a mensagem pronta. A conversa continua
@@ -189,7 +189,7 @@ export function Contact() {
           data-reveal
           noValidate
           onSubmit={onSubmit}
-          className="lg:col-span-6 lg:col-start-7"
+          className="min-w-0 lg:col-span-6 lg:col-start-7"
           aria-label="Agendamento por WhatsApp"
         >
           <div className="grid gap-6 sm:grid-cols-2">
@@ -250,7 +250,7 @@ export function Contact() {
           </div>
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary w-full !px-4 sm:w-auto sm:!px-[26px]">
               Gerar mensagem no WhatsApp
               <ArrowRight size={16} className="btn-arrow" aria-hidden="true" />
             </button>

@@ -1,6 +1,8 @@
-# DYNOFORCE PERFORMANCE
+# GP Garage Performance — site de remap e dinamômetro
 
-Site de uma oficina de remap e dinamômetro. O hero é uma puxada de dinamômetro em 3D controlada pela rolagem: o carro acelera nos rolos, a fumaça sobe, a telemetria e o gráfico de potência são traçados em sincronia, e a página segue para serviços, comparação antes/depois, resultados, sobre e agendamento por WhatsApp.
+Site da GP Garage Performance (Taguatinga Sul). O hero é uma puxada de dinamômetro em 3D controlada pela rolagem: o carro acelera nos rolos, a fumaça sobe, a telemetria e o gráfico de potência são traçados em sincronia, e a página segue para serviços, comparação antes/depois, resultados, sobre e agendamento por WhatsApp.
+
+A pasta ainda se chama `dynoforce-performance` porque o projeto nasceu com a marca fictícia DYNOFORCE, que continua disponível como segundo preset.
 
 React 19 · TypeScript · Vite · Three.js · React Three Fiber · drei · GSAP ScrollTrigger · Lenis · Tailwind CSS 4.
 
@@ -31,14 +33,16 @@ Tudo que é da empresa fica em `src/config/siteConfig.ts`.
 
 Os números de potência, torque e boost que vêm no projeto são **ilustrativos**. O site já os identifica como demonstração no HUD, nos gráficos, nos resultados e no rodapé. Ao trocar por medições reais, remova esses avisos nos componentes correspondentes.
 
-### Duas marcas no mesmo código
+### Identidade visual e as duas marcas
 
 `siteConfig.ts` traz dois presets:
 
-- `dynoforce` — a marca fictícia DYNOFORCE PERFORMANCE, em vermelho. É o padrão.
-- `gpgarage` — GP Garage Performance, em turquesa, com o logo (`public/images/gp-garage-logo.png`), os textos institucionais, a equipe e o Instagram reais.
+- `gpgarage` — GP Garage Performance, o padrão. A identidade vem do logo: fundo preto, o turquesa do anel (`#72C5C7`, medido na imagem), prata escovada nos títulos e letreiro itálico em caixa alta (fonte Saira). O logo (`public/images/gp-garage-logo.png`) aparece no cabeçalho, na tela de carregamento, no favicon e como letreiro luminoso na parede da oficina 3D. Os LEDs e as luzes de destaque da cena usam o mesmo turquesa.
+- `dynoforce` — a marca fictícia DYNOFORCE PERFORMANCE, em vermelho, com Space Grotesk.
 
-Para trocar: mude `DEFAULT_BRAND`, ou faça o build com `VITE_BRAND=gpgarage npm run build`, ou abra com `?brand=gpgarage` para pré-visualizar. A cor de destaque muda no CSS e também nas luzes da cena 3D.
+Cada preset define cores (`colors`), tipografia dos títulos (`type`: família, itálico, largura, peso, prata metálica) e textos. Para trocar a marca ativa: mude `DEFAULT_BRAND`, ou faça o build com `VITE_BRAND=dynoforce npm run build`, ou abra com `?brand=dynoforce` para pré-visualizar.
+
+As imagens da cena ficam em `public/images/<marca>/`, porque foram renderizadas com as luzes e o letreiro de cada marca.
 
 ## Trocar o carro 3D
 
@@ -96,12 +100,12 @@ public/
 
 ## Imagens
 
-As fotos de `public/images/render-*.jpg` e `hero-poster.jpg` são capturas da própria cena 3D, feitas com o gancho de depuração: abra com `?debug=1` e use `__dyno.setProgress(0.6)` e `__dyno.camera({...})` no console (`src/three/debug.ts`). Substitua por fotos da oficina quando houver.
+As fotos de `public/images/<marca>/render-*.jpg` e `hero-poster.jpg` são capturas da própria cena 3D, feitas com o gancho de depuração: abra com `?debug=1` e use `__dyno.setProgress(0.6)` e `__dyno.camera({...})` no console (`src/three/debug.ts`). Substitua por fotos da oficina quando houver.
 
 ## Créditos
 
 - Modelo 3D: *Ferrari 458 Italia*, por vicent091036 (Sketchfab), licença Creative Commons Attribution. Arquivo e textura de sombra distribuídos com os exemplos do three.js. O crédito aparece no rodapé do site e precisa continuar lá enquanto o modelo for usado.
-- Fontes: Space Grotesk, Inter e JetBrains Mono (SIL Open Font License), servidas localmente via Fontsource.
+- Fontes: Saira, Space Grotesk, Inter e JetBrains Mono (SIL Open Font License), servidas localmente via Fontsource.
 
 ## Depuração da cena
 

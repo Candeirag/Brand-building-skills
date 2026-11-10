@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-ink: #f5f5f5;
+  --color-ink: var(--brand-ink);
   --color-void: #050505;
   --color-graphite: #111111;
   --color-steel: #1a1a1b;
@@ -10,7 +10,7 @@
   --color-accent-deep: var(--brand-accent-deep);
   --color-on-accent: var(--brand-on-accent);
 
-  --font-display: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
+  --font-display: var(--brand-display), system-ui, sans-serif;
   --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
 
@@ -22,6 +22,12 @@
   --brand-accent: #e10600;
   --brand-accent-deep: #b80500;
   --brand-on-accent: #f5f5f5;
+  --brand-ink: #f5f5f5;
+  --brand-display: 'Space Grotesk Variable', 'Space Grotesk';
+  --brand-display-style: normal;
+  --brand-display-stretch: 100%;
+  --brand-display-weight: 700;
+  --brand-display-tracking: -0.035em;
   /* Margem externa única da página: tudo alinha nela. */
   --gutter: clamp(20px, 4vw, 64px);
   --header-h: 72px;
@@ -29,7 +35,7 @@
 
 html {
   background: #050505;
-  color: #f5f5f5;
+  color: var(--brand-ink);
   -webkit-text-size-adjust: 100%;
   scrollbar-color: #2a2a2a #050505;
 }
@@ -75,10 +81,35 @@ html.lenis body {
 
   .display {
     font-family: var(--font-display);
-    font-weight: 700;
-    letter-spacing: -0.035em;
+    font-weight: var(--brand-display-weight);
+    font-style: var(--brand-display-style);
+    font-stretch: var(--brand-display-stretch);
+    letter-spacing: var(--brand-display-tracking);
     line-height: 0.92;
     text-transform: uppercase;
+  }
+
+  /*
+   * Prata escovada do logo: as linhas dos títulos grandes recebem o mesmo
+   * degradê de metal das letras "GP". É material da marca, não enfeite.
+   */
+  html[data-metallic] .metal,
+  html[data-metallic] .display [data-line],
+  html[data-metallic] .display [data-hero-line] {
+    background-image: linear-gradient(
+      180deg,
+      #f4f5f6 0%,
+      #d5d7da 34%,
+      #9a9da1 58%,
+      #c9cbce 74%,
+      #eff0f1 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    /* O itálico passa da caixa do texto; sem folga a última letra é cortada. */
+    padding-right: 0.12em;
   }
 
   .num {

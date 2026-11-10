@@ -172,7 +172,7 @@ export function Hero() {
           className={`${chapterClass(chapter === 0)} ${copyBlock} lg:w-[min(46vw,760px)]`}
           inert={chapter !== 0}
         >
-          <h1 className="display text-[clamp(38px,10.4vw,62px)] lg:text-[clamp(50px,5.3vw,98px)]">
+          <h1 className="display text-[clamp(34px,9.8vw,62px)] lg:text-[clamp(50px,5.3vw,98px)]">
             {brand.heroLines.map((line) => (
               <span key={line} className="-mt-[0.16em] block overflow-hidden pb-[0.06em] pt-[0.16em]">
                 <span data-hero-line className="block">

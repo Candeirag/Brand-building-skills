@@ -14,7 +14,7 @@ export function Services() {
         <Heading
           id="servicos-titulo"
           lines={['Seis formas de', 'extrair mais.']}
-          className="text-[clamp(40px,10.5vw,64px)] lg:col-span-8 lg:text-[clamp(64px,7.4vw,136px)]"
+          className="text-[clamp(32px,9.6vw,64px)] lg:col-span-8 lg:text-[clamp(60px,7vw,130px)]"
         />
         <p data-reveal className="max-w-[26em] text-[17px] text-ink lg:col-span-4 lg:pb-3 lg:text-[19px]">
           Do primeiro diagnóstico ao projeto completo. Todo ajuste começa numa leitura e termina

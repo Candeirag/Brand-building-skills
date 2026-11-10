@@ -33,12 +33,12 @@ export function Logo({ size = 'md' }: LogoProps) {
       )}
       <span className="flex flex-col leading-none">
         <span
-          className={`font-display font-bold tracking-[-0.02em] ${large ? 'text-[34px]' : 'text-[19px]'}`}
+          className={`display !leading-none ${large ? 'text-[34px]' : 'text-[19px]'}`}
         >
           {brand.wordmark.primary}
         </span>
         <span
-          className={`mt-[5px] font-display font-medium text-ink/70 ${
+          className={`mt-[5px] font-display font-medium ${brand.logoImage ? 'text-accent' : 'text-ink/70'} ${
             large ? 'text-[13px] tracking-[0.52em]' : 'text-[8.5px] tracking-[0.47em]'
           }`}
         >

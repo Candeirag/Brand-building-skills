@@ -1,4 +1,4 @@
-import { brand } from '../config/siteConfig';
+import { brand, brandImage } from '../config/siteConfig';
 import { Heading } from './Heading';
 
 export function About() {
@@ -20,7 +20,7 @@ export function About() {
       <div className="relative mt-12 aspect-[4/3] overflow-hidden sm:aspect-[21/9] lg:mt-20">
         <img
           data-parallax
-          src="images/render-profile.jpg"
+          src={brandImage('render-profile.jpg')}
           alt="O carro visto de lado, preso ao dinamômetro, com a oficina acesa ao fundo."
           loading="lazy"
           className="absolute inset-x-0 -top-[8%] h-[116%] w-full object-cover"

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { brand, type ServiceItem } from '../config/siteConfig';
+import { brand, brandImage, type ServiceItem } from '../config/siteConfig';
 import { drawDynoChart, fitCanvas } from '../lib/chartRenderer';
 import { afterCurve as after, beforeCurve as before } from '../lib/comparison';
 import { formatDec } from '../lib/dynoPhysics';
@@ -170,15 +170,15 @@ function GainChart() {
 
 const IMAGES: Partial<Record<ServiceItem['visual'], { src: string; alt: string }>> = {
   rollers: {
-    src: 'images/render-rollers.jpg',
+    src: brandImage('render-rollers.jpg'),
     alt: 'Roda traseira do carro apoiada entre os dois rolos do dinamômetro.',
   },
   stage2: {
-    src: 'images/render-rear.jpg',
+    src: brandImage('render-rear.jpg'),
     alt: 'Traseira do carro com as três saídas de escape centrais e o difusor.',
   },
   custom: {
-    src: 'images/render-front.jpg',
+    src: brandImage('render-front.jpg'),
     alt: 'Frente do carro em três quartos, sob a luz da oficina.',
   },
 };

@@ -127,7 +127,7 @@ export function DynoSection() {
           <Heading
             id="dyno-titulo"
             lines={['Numbers', 'don’t lie.']}
-            className="text-[clamp(48px,13vw,80px)] lg:text-[clamp(64px,7.4vw,136px)]"
+            className="text-[clamp(44px,12.4vw,80px)] lg:text-[clamp(54px,6.1vw,116px)]"
           />
           <p data-reveal className="mt-7 max-w-[24em] text-[18px] text-ink lg:mt-10 lg:text-[21px]">
             Cada curva conta uma história. Cada ajuste é validado por dados.

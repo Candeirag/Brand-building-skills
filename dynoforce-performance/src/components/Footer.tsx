@@ -55,9 +55,10 @@ export function Footer() {
       <p
         aria-hidden="true"
         className="display mt-14 select-none whitespace-nowrap text-center leading-[0.8] text-ink lg:mt-20"
-        style={{ fontSize: `${(100 / letters) * 1.46}vw`, letterSpacing: '-0.045em' }}
+        data-wordmark
+        style={{ fontSize: `${(100 / letters) * (brand.type.italic ? 1.3 : 1.46)}vw` }}
       >
-        {brand.wordmark.primary}
+        <span className="metal inline-block">{brand.wordmark.primary}</span>
       </p>
 
       <div className="gutter mt-10 flex flex-col gap-3 pb-24 text-[13px] leading-[1.5] text-ink/60 lg:flex-row lg:items-end lg:justify-between lg:gap-10 lg:pb-8 lg:pr-[84px]">

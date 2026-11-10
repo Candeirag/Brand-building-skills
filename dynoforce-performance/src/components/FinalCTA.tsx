@@ -1,6 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import { scrollToTarget } from '../animations/scrollAnimations';
-import { whatsappUrl } from '../config/siteConfig';
+import { brandImage, whatsappUrl } from '../config/siteConfig';
 
 const LINES = ['Your car.', 'Your power.', 'Your rules.'];
 
@@ -12,7 +12,7 @@ export function FinalCTA() {
     >
       <img
         data-parallax
-        src="images/render-cta.jpg"
+        src={brandImage('render-cta.jpg')}
         alt=""
         loading="lazy"
         className="absolute inset-x-0 -top-[8%] h-[116%] w-full object-cover object-[60%_50%]"
@@ -23,7 +23,7 @@ export function FinalCTA() {
       />
 
       <div className="gutter relative pb-12 pt-[160px] lg:pb-20">
-        <h2 id="cta-titulo" className="display text-[clamp(50px,14.6vw,96px)] lg:text-[clamp(96px,11.4vw,220px)]">
+        <h2 id="cta-titulo" className="display text-[clamp(42px,12.2vw,96px)] lg:text-[clamp(96px,11vw,212px)]">
           {LINES.map((line) => (
             <span key={line} className="-mt-[0.16em] block overflow-hidden pb-[0.07em] pt-[0.16em]">
               <span data-line className="block">
