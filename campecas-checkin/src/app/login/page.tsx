@@ -6,7 +6,7 @@ import { LoginForm } from "./login-form";
 export const metadata: Metadata = { title: "Entrar" };
 
 /*
- * Desktop: apresentação à esquerda (campo grafite), formulário à direita.
+ * Desktop: apresentação à esquerda (azul-escuro da marca), formulário à direita.
  * Celular: logo e formulário primeiro; a apresentação vem depois.
  */
 export default async function LoginPage({
@@ -22,7 +22,7 @@ export default async function LoginPage({
     <main className="flex min-h-dvh flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <section className="flex flex-col px-5 pt-[max(env(safe-area-inset-top),2rem)] pb-10 sm:px-8 lg:order-2">
         <div className="lg:hidden">
-          <Logo height={34} />
+          <Logo height={72} priority />
         </div>
         <div className="flex flex-1 items-start justify-center pt-10 lg:items-center lg:pt-0">
           <div className="w-full max-w-sm">
@@ -39,9 +39,9 @@ export default async function LoginPage({
         </div>
       </section>
 
-      <section className="flex flex-col justify-between gap-8 bg-ink p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] text-white sm:p-8 lg:order-1 lg:p-12">
+      <section className="flex flex-col justify-between gap-8 bg-brand-deep p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] text-white sm:p-8 lg:order-1 lg:p-12">
         <div className="hidden lg:block">
-          <Logo tone="dark" height={44} />
+          <Logo tone="dark" height={104} />
         </div>
         <div className="max-w-lg">
           <p className="text-[28px] leading-[1.15] font-semibold lg:text-[40px] lg:leading-[1.1]">
@@ -52,7 +52,7 @@ export default async function LoginPage({
             WhatsApp.
           </p>
         </div>
-        <p className="text-sm text-white/70">Uso exclusivo da equipe da oficina CAMPEÇAS.</p>
+        <p className="text-sm text-white/70">Uso exclusivo da equipe da MineiroCar Auto Center.</p>
       </section>
     </main>
   );

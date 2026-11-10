@@ -1,5 +1,5 @@
 import { Document, Image, Page, Path, Rect, StyleSheet, Svg, Text, View } from "@react-pdf/renderer";
-import { BRAND_DARK, BRAND_RED, LOGO_VIEWBOX, MARK_PATHS, WORD_PATHS } from "@/lib/brand";
+import { BRAND_DEEP, BRAND_RED, LOGO_LAYERS, LOGO_VIEWBOX } from "@/lib/brand";
 import { CHECKLIST_STATUS, fuelLabel, groupItems } from "@/lib/checklist";
 import { formatDateTime, formatKm, formatPhone, formatPlate } from "@/lib/format";
 import { BODY_PATH, MAP_VIEWBOX, MAP_ZONES, ROOF_RECT, ZONE_STYLE, zoneState } from "@/lib/damage-map";
@@ -8,21 +8,22 @@ import { workshopLines } from "@/lib/workshop";
 import type { Tables } from "@/lib/supabase/database.types";
 
 const C = {
-  red: BRAND_RED,
-  ink: BRAND_DARK,
+  red: "#d9262d",
+  ink: "#1f2433",
+  deep: BRAND_DEEP,
   graphite: "#2b2d31",
   steel: "#6b7078",
   line: "#e3e4e7",
   paper: "#f3f4f6",
   ok: "#15803d",
   okSoft: "#e8f6ed",
-  redSoft: "#fbebed",
+  redSoft: "#fdeced",
 };
 
 const s = StyleSheet.create({
   page: { paddingTop: 0, paddingBottom: 48, paddingHorizontal: 0, fontFamily: "Helvetica", fontSize: 9, color: C.ink },
-  header: { backgroundColor: C.ink, paddingHorizontal: 32, paddingTop: 22, paddingBottom: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  brandSub: { color: "#a7a3a4", fontSize: 7, letterSpacing: 2.5, marginTop: 5 },
+  header: { backgroundColor: C.deep, paddingHorizontal: 32, paddingTop: 22, paddingBottom: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  brandSub: { color: "#aab0c4", fontSize: 7, letterSpacing: 2.5, marginTop: 5 },
   headerRight: { alignItems: "flex-end" },
   docTitle: { color: "#c9cacd", fontSize: 8, letterSpacing: 1.5 },
   number: { color: "#fff", fontFamily: "Helvetica-Bold", fontSize: 16, marginTop: 3 },
@@ -105,18 +106,16 @@ function Field({ label, value, wide }: { label: string; value: string | number |
   );
 }
 
-/** Logo original da CAMPEÇAS (palavra em branco sobre o grafite da marca, como no arquivo da oficina). */
+/** Logo da MINEIROCAR Auto Center em versão para fundo escuro (azul-escuro da marca). */
 function BrandLogo() {
-  const h = 34;
+  const h = 54;
   const w = (h * LOGO_VIEWBOX[2]) / LOGO_VIEWBOX[3];
   return (
     <Svg width={w} height={h} viewBox={LOGO_VIEWBOX.join(" ")}>
-      {MARK_PATHS.map((d, i) => (
-        <Path key={`m${i}`} d={d} fill={BRAND_RED} />
-      ))}
-      {WORD_PATHS.map((d, i) => (
-        <Path key={`w${i}`} d={d} fill="#ffffff" />
-      ))}
+      <Path d={LOGO_LAYERS.mark} fill={BRAND_RED} />
+      <Path d={LOGO_LAYERS.wordBlue} fill="#ffffff" />
+      <Path d={LOGO_LAYERS.wordRed} fill={BRAND_RED} />
+      <Path d={LOGO_LAYERS.subtitle} fill="#ffffff" />
     </Svg>
   );
 }
@@ -186,10 +185,10 @@ export function InspectionReport({ inspection: i, items, photos, generatedAt, ma
   return (
     <Document
       title={`Inspeção ${i.number ?? "rascunho"}: ${formatPlate(i.plate)}`}
-      author="CAMPEÇAS"
+      author="MineiroCar Auto Center"
       subject="Relatório de inspeção de entrada de veículo"
-      creator="CAMPEÇAS CHECK-IN"
-      producer="CAMPEÇAS CHECK-IN"
+      creator="Check-in MineiroCar"
+      producer="Check-in MineiroCar"
       language="pt-BR"
     >
       <Page size="A4" style={s.page}>
@@ -333,7 +332,7 @@ export function InspectionReport({ inspection: i, items, photos, generatedAt, ma
             <View style={s.signRow}>
               <View style={s.signCol}>
                 <View style={s.signLine} />
-                <Text style={s.signLabel}>Funcionário CAMPEÇAS</Text>
+                <Text style={s.signLabel}>Funcionário MineiroCar</Text>
               </View>
               <View style={s.signCol}>
                 <View style={s.signLine} />

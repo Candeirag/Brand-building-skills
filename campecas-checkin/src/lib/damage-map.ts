@@ -111,9 +111,9 @@ export function zoneState(
 
 /** Cores dos estados (mesmo objeto para as marcas e para a legenda). */
 export const ZONE_STYLE: Record<ZoneState, { fill: string; stroke: string; label: string; dashed?: boolean }> = {
-  damaged: { fill: "#BF1A2C", stroke: "#8E1424", label: "Avariado" },
-  ok: { fill: "#e4dede", stroke: "#c9c2c2", label: "Normal" },
-  not_checked: { fill: "#ffffff", stroke: "#6b6b6b", label: "Não verificado", dashed: true },
-  not_applicable: { fill: "#f6f2f2", stroke: "#e4dede", label: "Não se aplica" },
-  pending: { fill: "#ffffff", stroke: "#d4cfcf", label: "Pendente" },
+  damaged: { fill: "#D9262D", stroke: "#A51D23", label: "Avariado" },
+  ok: { fill: "#e1e5ee", stroke: "#c6ccd8", label: "Normal" },
+  not_checked: { fill: "#ffffff", stroke: "#686e7e", label: "Não verificado", dashed: true },
+  not_applicable: { fill: "#f1f3f8", stroke: "#e1e5ee", label: "Não se aplica" },
+  pending: { fill: "#ffffff", stroke: "#cdd2dd", label: "Pendente" },
 };

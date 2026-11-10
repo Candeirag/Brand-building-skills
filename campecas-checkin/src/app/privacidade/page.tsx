@@ -5,7 +5,7 @@ import { PLACEHOLDER, WORKSHOP, orPlaceholder } from "@/lib/workshop";
 
 export const metadata: Metadata = { title: "Privacidade e LGPD" };
 
-const UPDATED_AT = "9 de novembro de 2026";
+const UPDATED_AT = "10 de novembro de 2026";
 
 export default function PrivacyPage() {
   const controller: [string, string][] = [
@@ -20,7 +20,7 @@ export default function PrivacyPage() {
       <header className="border-b border-border px-5 py-4 sm:px-6">
         <div className="mx-auto max-w-3xl">
           <Link href="/" aria-label="Início">
-            <Logo height={26} subtitle="Check-in · inspeção de entrada" />
+            <Logo variant="horizontal" height={30} subtitle="Check-in · inspeção de entrada" />
           </Link>
         </div>
       </header>
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
           <p className="mt-1 text-sm text-muted">Última atualização: {UPDATED_AT}</p>
         </div>
         <p>
-          O CAMPEÇAS CHECK-IN é o sistema interno usado pela oficina CAMPEÇAS para registrar as condições dos veículos no
+          O Check-in MineiroCar é o sistema interno usado pela oficina MineiroCar Auto Center para registrar as condições dos veículos no
           momento da entrada. Este aviso descreve como os dados pessoais são tratados, em conformidade com a Lei Geral de
           Proteção de Dados (Lei 13.709/2018).
         </p>

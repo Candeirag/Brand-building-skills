@@ -28,7 +28,7 @@ const LABELS: [string, string, string][] = [
 
 const inspection: Tables<"inspections"> = {
   id: "11111111-1111-1111-1111-111111111111",
-  number: "CP2026-000123",
+  number: "MC2026-000123",
   status: "finalized",
   vehicle_id: null,
   customer_id: null,

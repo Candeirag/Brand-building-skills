@@ -310,7 +310,7 @@ export function InspectionEditor({
       setPending((prev) => prev.map((p) => (p.tempId === upload.tempId ? { ...p, error: undefined } : p)));
       try {
         const plate = formatPlate(formRef.current.plate);
-        const stamp = `CAMPEÇAS · ${plate === "–" ? "SEM PLACA" : plate} · ${formatDateTime(new Date())}`;
+        const stamp = `MINEIROCAR · ${plate === "–" ? "SEM PLACA" : plate} · ${formatDateTime(new Date())}`;
         const { blob, width, height } = await compressImage(upload.file, stamp);
         // A primeira foto também cria o rascunho, se ele ainda não existir.
         const { id: inspectionId } = await ensureInspection({});

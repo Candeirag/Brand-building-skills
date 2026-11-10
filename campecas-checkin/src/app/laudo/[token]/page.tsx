@@ -11,7 +11,7 @@ import { formatDate, formatDateTime, formatNumber, formatPlate, formatTime } fro
 import { PHOTO_CATEGORIES } from "@/lib/photos";
 import { plural } from "@/lib/plural";
 import { loadPublicReport } from "@/lib/public-report";
-import { WORKSHOP, workshopLines } from "@/lib/workshop";
+import { workshopLines } from "@/lib/workshop";
 
 export const dynamic = "force-dynamic";
 
@@ -61,12 +61,16 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
 
   return (
     <div className="min-h-dvh bg-ground">
-      <header className="bg-ink px-4 pt-[max(env(safe-area-inset-top),1.25rem)] pb-5 text-white sm:px-6">
+      <header className="bg-brand-deep px-4 pt-[max(env(safe-area-inset-top),1.25rem)] pb-5 text-white sm:px-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <Logo tone="dark" height={34} />
-          <div className="text-sm text-white/80 sm:text-right">
-            {shop.length ? shop.map((l) => <p key={l}>{l}</p>) : <p>Oficina {WORKSHOP.name}</p>}
-          </div>
+          <Logo tone="dark" height={64} priority />
+          {shop.length > 0 && (
+            <div className="text-sm text-white/80 sm:text-right">
+              {shop.map((l) => (
+                <p key={l}>{l}</p>
+              ))}
+            </div>
+          )}
         </div>
       </header>
 

@@ -46,7 +46,7 @@ export async function compressImage(file: File, stamp?: string): Promise<Compres
       const boxH = fontSize + pad * 2;
       ctx.fillStyle = "rgba(11,11,12,0.72)";
       ctx.fillRect(0, h - boxH, textWidth + pad * 3, boxH);
-      ctx.fillStyle = "#BF1A2C";
+      ctx.fillStyle = "#D9262D";
       ctx.fillRect(0, h - boxH, Math.max(4, Math.round(fontSize * 0.25)), boxH);
       ctx.fillStyle = "#ffffff";
       ctx.textBaseline = "middle";

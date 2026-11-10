@@ -25,7 +25,7 @@ export function LoginForm({ next, initialError }: { next?: string; initialError?
           required
           defaultValue={state.email}
           className="field-input"
-          placeholder="seu.nome@campecas.com.br"
+          placeholder="seu.nome@email.com"
         />
       </div>
       <div>

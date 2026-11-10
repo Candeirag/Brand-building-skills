@@ -1,6 +1,6 @@
-# CAMPEÇAS CHECK-IN
+# Check-in MineiroCar
 
-Sistema web da oficina **CAMPEÇAS** para a inspeção de entrada de veículos antes do início dos serviços:
+Sistema web da oficina **MINEIROCAR Auto Center** para a inspeção de entrada de veículos antes do início dos serviços:
 dados do veículo e do proprietário, quilometragem, data e hora automáticas, checklist com 18 itens, fotografias
 pela câmera do celular, avarias preexistentes, responsáveis, histórico completo e relatório PDF.
 
@@ -32,7 +32,7 @@ A arquitetura, o modelo de dados, as medidas de segurança e LGPD e a direção 
 | **Histórico** | Busca por placa, proprietário ou número, filtro por período e situação, paginação, fotos ampliáveis, histórico por veículo |
 | **Mapa de avarias** | Silhueta do carro vista de cima com cada zona no estado do checklist: atualiza ao vivo no editor e aparece na inspeção finalizada e no PDF |
 | **Laudo para o cliente** | Link público `/laudo/[token]` (30 dias, revogável, fora dos buscadores) com veículo, km, combustível, checklist, avarias e fotos; botão "Enviar laudo no WhatsApp" com mensagem pronta, "Copiar link" e registro de quem enviou e quando |
-| **Relatório PDF** | Identidade visual Campeças, veículo, proprietário (documento mascarado), km, data, checklist, mapa e descrição das avarias, fotos, responsáveis e campos de assinatura |
+| **Relatório PDF** | Identidade visual MineiroCar, veículo, proprietário (documento mascarado), km, data, checklist, mapa e descrição das avarias, fotos, responsáveis e campos de assinatura |
 | **Equipe (admin)** | Cadastrar funcionários, definir função, desativar/reativar acesso (bloqueia o login na hora), redefinir senha, anonimizar dados de clientes (LGPD) |
 | **Minha conta** | Cada funcionário troca a própria senha (ex.: a provisória do primeiro acesso) |
 | **Celular** | Layout mobile-first, botões grandes, instalável na tela inicial (manifest PWA) |

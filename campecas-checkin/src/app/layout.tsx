@@ -10,16 +10,16 @@ const barlow = Barlow({
 });
 
 export const metadata: Metadata = {
-  title: { default: "CAMPEÇAS CHECK-IN", template: "%s · CAMPEÇAS CHECK-IN" },
-  description: "Inspeção digital de entrada de veículos da oficina CAMPEÇAS.",
-  applicationName: "CAMPEÇAS CHECK-IN",
+  title: { default: "Check-in MineiroCar", template: "%s · Check-in MineiroCar" },
+  description: "Inspeção digital de entrada de veículos da MineiroCar Auto Center.",
+  applicationName: "Check-in MineiroCar",
   robots: { index: false, follow: false },
   appleWebApp: { capable: true, title: "Check-in", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#fbf8f8",
+  themeColor: "#f7f8fb",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

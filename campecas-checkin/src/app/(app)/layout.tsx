@@ -26,7 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-dvh lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="no-print sticky top-0 hidden h-dvh flex-col border-r border-border px-3 pt-5 pb-3 lg:flex">
         <Link href="/" className="mb-6 px-1.5" aria-label="Ir para o painel">
-          <Logo height={26} subtitle="Check-in · inspeção de entrada" />
+          <Logo height={64} subtitle="Check-in · inspeção de entrada" priority />
         </Link>
         <SidebarNav isAdmin={isAdmin} openCount={openCount} />
         <UserMenu name={profile.full_name} roleLabel={roleLabel} />

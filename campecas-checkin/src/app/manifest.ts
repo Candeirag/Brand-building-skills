@@ -2,14 +2,14 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "CAMPEÇAS CHECK-IN",
+    name: "Check-in MineiroCar",
     short_name: "Check-in",
-    description: "Inspeção digital de entrada de veículos",
+    description: "Inspeção digital de entrada de veículos da MineiroCar Auto Center",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#231f20",
-    theme_color: "#fbf8f8",
+    background_color: "#1c2340",
+    theme_color: "#f7f8fb",
     lang: "pt-BR",
     icons: [
       { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },

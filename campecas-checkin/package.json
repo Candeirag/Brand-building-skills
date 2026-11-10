@@ -2,7 +2,7 @@
   "name": "campecas-checkin",
   "version": "1.0.0",
   "private": true,
-  "description": "CAMPEÇAS CHECK-IN — inspeção digital de entrada de veículos",
+  "description": "Check-in MineiroCar — inspeção digital de entrada de veículos",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

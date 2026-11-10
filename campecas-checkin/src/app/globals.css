@@ -1,10 +1,12 @@
 @import "tailwindcss";
 
 /*
- * CAMPEÇAS CHECK-IN: estilo "accent ladder" (direção de arte, seed 1386293280)
- * Cores da logo original: vermelho #BF1A2C e grafite #231F20.
- * Um matiz só, o vermelho Campeças: cheio apenas em marcas pequenas (avarias, ícone ativo,
- * o único botão principal); os tons claros dele fazem o trabalho de área.
+ * CHECK-IN MINEIROCAR Auto Center: estilo "accent ladder" (direção de arte, seed 1386293280)
+ * Cores da logo: vermelho #EC3237, azul #36478D e grafite #312F30.
+ * O vermelho é o matiz de ação e de avaria: cheio apenas em marcas pequenas (avarias, ícone ativo,
+ * o único botão principal), num tom um pouco mais fechado (#D9262D) para o texto branco ter contraste;
+ * os tons claros dele fazem o trabalho de área. O azul da marca vai para as superfícies escuras
+ * (cabeçalho do laudo, painel do login, ícone) e puxa os neutros para o frio.
  * Chrome claro, superfícies chapadas: borda de 1 px OU degrau de tom, nunca sombra em repouso.
  * Raio fechado: card 8 / controle 6 / chip 4.
  */
@@ -14,30 +16,34 @@
   --color-black: #000000;
   --color-transparent: transparent;
 
-  /* Superfícies (fundo um degrau tingido em direção ao vermelho) */
-  --color-ground: #fbf8f8;
+  /* Superfícies (fundo um degrau tingido em direção ao azul da marca) */
+  --color-ground: #f7f8fb;
   --color-surface: #ffffff;
-  --color-raised: #f6f2f2;
-  --color-active: #fbebed;
+  --color-raised: #f1f3f8;
+  --color-active: #fdeced;
 
-  /* Escada do matiz */
-  --color-tint: #fbebed;
-  --color-tint-2: #f3cdd2;
-  --color-accent: #bf1a2c;
-  --color-accent-ink: #8e1424;
-  --color-accent-on-dark: #ea5562; /* mesmo matiz, legível sobre o grafite #231F20 */
+  /* Escada do matiz (vermelho MineiroCar) */
+  --color-tint: #fdeced;
+  --color-tint-2: #f7c9cb;
+  --color-accent: #d9262d;
+  --color-accent-ink: #a51d23;
+  --color-accent-on-dark: #ff7b80; /* mesmo matiz, legível sobre o azul-escuro */
+
+  /* Azul da marca */
+  --color-brand: #36478d;
+  --color-brand-deep: #1c2340;
 
   /* Linhas em três degraus */
-  --color-border: #ebe6e6;
-  --color-rule: #f3eeee;
-  --color-control: #d4cfcf;
-  --color-dash: #e2dcdc;
+  --color-border: #e4e7ef;
+  --color-rule: #eef0f5;
+  --color-control: #cdd2dd;
+  --color-dash: #dde1ea;
 
   /* Texto em três níveis (todos >= 4,5:1 sobre o fundo) */
-  --color-ink: #231f20;
-  --color-muted: #5f6368;
-  --color-faint: #6b6b6b;
-  --color-primary: #231f20;
+  --color-ink: #1f2433;
+  --color-muted: #5a6070;
+  --color-faint: #686e7e;
+  --color-primary: #1f2433;
 
   /* Status */
   --color-positive: #247b50;

@@ -4,7 +4,7 @@
  * na página de Privacidade. Preencha com os dados reais da oficina.
  */
 export const WORKSHOP = {
-  name: "CAMPEÇAS",
+  name: "MineiroCar Auto Center",
   legalName: "", // razão social
   cnpj: "", // 00.000.000/0000-00
   address: "", // rua, número, bairro, cidade/UF, CEP

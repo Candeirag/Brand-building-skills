@@ -31,7 +31,7 @@ describe("mensagem do laudo", () => {
       link: "https://campecas-checkin.vercel.app/laudo/abc",
     });
     expect(msg).toBe(
-      "Olá, Carlos! Aqui é da oficina Campeças. Segue o laudo de entrada do seu Volkswagen Gol 1.0, placa ABC-1D23, registrado em 09/11/2026 às 09:10: https://campecas-checkin.vercel.app/laudo/abc",
+      "Olá, Carlos! Aqui é da MineiroCar Auto Center. Segue o laudo de entrada do seu Volkswagen Gol 1.0, placa ABC-1D23, registrado em 09/11/2026 às 09:10: https://campecas-checkin.vercel.app/laudo/abc",
     );
     expect(whatsappUrl("5561998649037", "Olá!")).toBe("https://wa.me/5561998649037?text=Ol%C3%A1!");
   });

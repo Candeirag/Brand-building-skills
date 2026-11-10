@@ -1,5 +1,6 @@
 import { formatDate, formatPlate, formatTime } from "./format";
 import { onlyDigits } from "./validation";
+import { WORKSHOP } from "./workshop";
 
 /**
  * Normaliza um telefone brasileiro para o wa.me: só dígitos, com DDI 55 e DDD.
@@ -29,7 +30,7 @@ export function reportMessage(input: {
   const name = input.ownerName?.trim().split(/\s+/)[0] || "tudo bem";
   const vehicle = [input.brand, input.model].filter(Boolean).join(" ") || "veículo";
   return (
-    `Olá, ${name}! Aqui é da oficina Campeças. Segue o laudo de entrada do seu ${vehicle}, ` +
+    `Olá, ${name}! Aqui é da ${WORKSHOP.name}. Segue o laudo de entrada do seu ${vehicle}, ` +
     `placa ${formatPlate(input.plate)}, registrado em ${formatDate(input.registeredAt)} às ${formatTime(input.registeredAt)}: ${input.link}`
   );
 }

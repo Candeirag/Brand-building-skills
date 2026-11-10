@@ -149,7 +149,7 @@ values ('11111111-1111-1111-1111-111111111111', 'damage', 'front_bumper', '11111
 
 -- Finalização
 select tests.ok((select number from public.finalize_inspection('11111111-1111-1111-1111-111111111111'))
-  ~ '^CP[0-9]{4}-000001$', 'finalização gera número único sequencial');
+  ~ '^MC[0-9]{4}-000001$', 'finalização gera número único sequencial');
 
 select tests.ok((select status from public.inspections where id = '11111111-1111-1111-1111-111111111111') = 'finalized',
   'inspeção finalizada');
@@ -323,7 +323,7 @@ select tests.throws('select * from public.report_links', 'permission denied', 'a
 select tests.throws($$select public.public_report((select token from t_link), 'chave-errada')$$,
   'Acesso negado', 'leitura pública exige a chave do servidor');
 select tests.ok((select public.public_report((select token from t_link), (select k from t_key)) ->> 'number')
-  ~ '^CP[0-9]{4}-000001$', 'rota do servidor lê o laudo com token válido');
+  ~ '^MC[0-9]{4}-000001$', 'rota do servidor lê o laudo com token válido');
 select tests.ok((select public.public_report((select token from t_link3), (select k from t_key)) ->> 'owner_document_masked')
   = '**.222.333/0001-**', 'documento sai mascarado');
 select tests.ok(not (public.public_report((select token from t_link), (select k from t_key)) ? 'owner_phone')

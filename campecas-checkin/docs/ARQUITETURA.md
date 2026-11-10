@@ -1,4 +1,4 @@
-# Arquitetura — CAMPEÇAS CHECK-IN
+# Arquitetura — Check-in MineiroCar
 
 ## Visão geral
 
@@ -102,12 +102,16 @@ Caminho no Storage: `{inspection_id}/{categoria}/{uuid}.jpg`.
 A interface segue a skill de direção de arte para telas de app (`references/app-screens.md`), estilo
 **accent ladder** (seed `1386293280`):
 
-- **Logo original da oficina** (vetores do arquivo CorelDRAW, sem "Lanternagem e pintura" e sem telefones) em
-  `src/lib/brand.ts`: versão para fundo claro (palavra no grafite) e para fundo escuro (palavra em branco), e o
-  símbolo do pistão sozinho no ícone do app e na barra do celular.
-- **Um matiz só, o vermelho da logo (`#BF1A2C`)**, cheio apenas em marcas pequenas: as avarias, o ícone da
-  navegação ativa e o único botão preenchido de cada tela. Os tons claros dele fazem o trabalho de área
-  (item ativo, avisos de avaria). O fundo (`#fbf8f8`) fica um degrau tingido em direção ao vermelho, e o texto usa o grafite da logo (`#231F20`).
+- **Logo da MINEIROCAR Auto Center**, vetorizada a partir da imagem enviada pela oficina (uma camada por cor;
+  `scripts/logo/`). Três versões em `public/`: completa (carro sobre o nome) para login, laudo e menu lateral;
+  horizontal (MINEIROCAR + AUTO CENTER) para faixas baixas; e o símbolo (carro com a chave) no ícone do app e na
+  barra do celular. Cada uma com variante para fundo escuro ("MINEIRO" e "AUTO CENTER" em branco). Os mesmos
+  caminhos ficam em `src/lib/brand.ts` para o PDF e o ícone, desenhados no servidor.
+- **Um matiz de ação, o vermelho da logo** (`#EC3237`, fechado em `#D9262D` nos preenchimentos para o texto branco
+  ter contraste), cheio apenas em marcas pequenas: as avarias, o ícone da navegação ativa e o único botão
+  preenchido de cada tela. Os tons claros dele fazem o trabalho de área (item ativo, avisos de avaria).
+- **O azul da logo (`#36478D`)** dá o azul-escuro das superfícies escuras (`#1C2340`: cabeçalho do laudo e do PDF,
+  painel do login, ícone) e puxa os neutros para o frio: fundo `#f7f8fb`, texto `#1f2433`.
 - **Vermelho significa avaria.** Em todo lugar (tabelas, mapa, KPIs, PDF) a cor cheia aponta um dano ou uma
   pendência; o que está normal fica em cinza.
 - **Elemento-assinatura: o mapa de avarias** (`src/lib/damage-map.ts`), o croqui da ficha de entrada em papel,
@@ -115,8 +119,8 @@ A interface segue a skill de direção de arte para telas de app (`references/ap
 - **Estrutura "plano aberto"**: barra lateral clara de 240 px no desktop; no celular, barra superior de 48 px com o
   nome da tela e barra inferior com os destinos (o editor usa a tela inteira).
 - **Superfícies chapadas**: borda de 1 px ou degrau de tom, sem sombra em repouso; raio 8/6/4; uma família
-  tipográfica (Barlow) na interface, com mono só para identificadores (placa, nº da inspeção); a palavra CAMPEÇAS
-  é sempre o vetor da logo, nunca texto digitado.
+  tipográfica (Barlow) na interface, com mono só para identificadores (placa, nº da inspeção); o nome MINEIROCAR
+  na marca é sempre o vetor da logo, nunca texto digitado.
 - **Cada tela responde a uma pergunta**, escrita como comentário no topo do arquivo da página (ex.: painel:
   "Quais carros do pátio estão com inspeção aberta, e o que entrou hoje?").
 
