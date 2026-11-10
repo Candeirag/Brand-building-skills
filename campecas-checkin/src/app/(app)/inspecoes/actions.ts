@@ -33,7 +33,9 @@ export async function createDraftInspection(patch: TablesUpdate<"inspections">):
   const { data, error } = await supabase.from("inspections").insert(row).select("id, started_at").single();
   if (error || !data) return { ok: false, error: friendlyError(error, "Não foi possível iniciar a inspeção.") };
 
-  revalidatePath("/");
+  // Sem revalidatePath: ele faria o Next recarregar a rota atual, que o editor já trocou
+  // para /inspecoes/{id}/editar, e o editor seria remontado com o que está no banco,
+  // perdendo o que foi digitado nesse intervalo. O painel é dinâmico e lê o banco a cada acesso.
   return { ok: true, id: data.id, started_at: data.started_at };
 }
 
