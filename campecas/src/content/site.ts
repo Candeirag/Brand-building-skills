@@ -148,7 +148,7 @@ export const chapters = {
 
 /* ------------------------------------------------------------------- processo */
 
-export const process = {
+export const workflow = {
   scene: "05",
   slug: "INT. RECEPÇÃO — DIA",
   title: "Da chave na mão à chave de volta.",
