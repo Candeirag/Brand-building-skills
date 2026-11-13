@@ -87,6 +87,14 @@
    Tipografia
    ========================================================================== */
 
+/* "Palco": telas onde as cenas fixadas (capítulos e processo) cabem inteiras.
+   Precisa de largura, de altura e de movimento liberado. Mesmo valor de MQ.stage em src/lib/gsap.ts. */
+@custom-variant stage {
+  @media (min-width: 1024px) and (min-height: 680px) and (prefers-reduced-motion: no-preference) {
+    @slot;
+  }
+}
+
 @utility display {
   font-family: var(--font-display);
   font-weight: 400;

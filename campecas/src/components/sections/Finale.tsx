@@ -95,14 +95,14 @@ export function Finale() {
               {hasWhatsApp ? (
                 <a href={whatsappUrl()} target="_blank" rel="noopener noreferrer" className={infoLink}>
                   {site.whatsapp.display}
-                  <span className="label ml-2 text-ash no-underline">WhatsApp</span>
+                  <span className="label ml-2 inline-block text-ash">WhatsApp</span>
                 </a>
               ) : (
                 <span className={info}>[NÚMERO]</span>
               )}
               <a href={`tel:${site.phone.number}`} className={infoLink}>
                 {site.phone.display}
-                <span className="label ml-2 text-ash">Fixo</span>
+                <span className="label ml-2 inline-block text-ash">Fixo</span>
               </a>
             </dd>
           </div>

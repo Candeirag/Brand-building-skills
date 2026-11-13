@@ -24,9 +24,15 @@ export const EASE = {
 export const MQ = {
   motion: "(prefers-reduced-motion: no-preference)",
   reduced: "(prefers-reduced-motion: reduce)",
-  desktop: "(min-width: 1024px)",
-  desktopMotion: "(min-width: 1024px) and (prefers-reduced-motion: no-preference)",
-  compactMotion: "(max-width: 1023.98px) and (prefers-reduced-motion: no-preference)",
+  /** Palco fixado (capítulos, processo): tela larga, alta o bastante e com movimento. Igual à variante `stage:` do CSS. */
+  stage: "(min-width: 1024px) and (min-height: 680px) and (prefers-reduced-motion: no-preference)",
+  /** Com movimento, mas sem palco: cenas empilhadas com animações leves. */
+  stackedMotion:
+    "(max-width: 1023.98px) and (prefers-reduced-motion: no-preference), (max-height: 679.98px) and (prefers-reduced-motion: no-preference)",
+  /** Qualquer situação sem palco (inclui movimento reduzido). */
+  stacked: "(max-width: 1023.98px), (max-height: 679.98px), (prefers-reduced-motion: reduce)",
+  /** Antes → depois fixado: só precisa de altura mínima e movimento. */
+  pinned: "(min-height: 560px) and (prefers-reduced-motion: no-preference)",
   finePointer: "(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)",
 } as const;
 

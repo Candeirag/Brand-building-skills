@@ -24,7 +24,7 @@ function buildEntrance(panel: HTMLElement) {
 
 /**
  * CENA 04 — serviços como capítulos.
- * Desktop: um palco fixado em que o capítulo troca em CORTE SECO (sem transição),
+ * Telas grandes: um palco fixado em que o capítulo troca em CORTE SECO (sem transição),
  * com um quadro de flash e a entrada do texto a cada corte.
  * Celular, tablet e movimento reduzido: os capítulos ficam empilhados, uma tela cada.
  */
@@ -39,7 +39,7 @@ export function Chapters() {
       const announce = (index: number) => announceScene({ scene: chapters.scene, title: items[index].title });
 
       /* ---------- desktop: palco fixado, cortes secos ---------- */
-      media.add(MQ.desktopMotion, () => {
+      media.add(MQ.stage, () => {
         const entrances = panels.map(buildEntrance);
         const images = panels.map((panel) => panel.querySelector(".chapter-image"));
         const numbers = panels.map((panel) => panel.querySelector(".chapter-number"));
@@ -88,7 +88,7 @@ export function Chapters() {
       });
 
       /* ---------- empilhado: legenda de cena por capítulo ---------- */
-      media.add(`(max-width: 1023.98px), ${MQ.reduced}`, () => {
+      media.add(MQ.stacked, () => {
         panels.forEach((panel, index) => {
           ScrollTrigger.create({
             trigger: panel,
@@ -102,7 +102,7 @@ export function Chapters() {
       });
 
       /* ---------- empilhado com movimento: entrada + parallax leve ---------- */
-      media.add(MQ.compactMotion, () => {
+      media.add(MQ.stackedMotion, () => {
         panels.forEach((panel) => {
           const entrance = buildEntrance(panel);
           ScrollTrigger.create({ trigger: panel, start: "top 62%", once: true, onEnter: () => entrance.play() });
@@ -127,7 +127,7 @@ export function Chapters() {
         Serviços
       </h2>
 
-      <div className="chapters-stage relative lg:motion-safe:h-svh lg:motion-safe:overflow-hidden">
+      <div className="chapters-stage relative stage:h-svh stage:overflow-hidden">
         {items.map((chapter, index) => {
           const number = String(index + 1).padStart(2, "0");
           const { external, ...link } = whatsappLinkProps(chapter.whatsapp);
@@ -136,7 +136,7 @@ export function Chapters() {
               key={chapter.id}
               id={chapter.id}
               aria-labelledby={`${chapter.id}-titulo`}
-              className="chapter relative grid overflow-hidden border-t border-black bg-ink lg:min-h-svh lg:grid-cols-2 lg:motion-safe:absolute lg:motion-safe:inset-0 lg:motion-safe:border-0"
+              className="chapter relative grid overflow-hidden border-t border-black bg-ink lg:min-h-svh lg:grid-cols-2 stage:absolute stage:inset-0 stage:border-0"
             >
               {/* imagem grande; o lado alterna a cada capítulo, como plano e contraplano */}
               <div
@@ -158,7 +158,7 @@ export function Chapters() {
               <div className="px-gutter relative flex flex-col justify-end pt-10 pb-16 lg:pt-[calc(var(--bar)+2rem)] lg:pb-[calc(var(--bar)+3rem)]">
                 {/* número do capítulo, gigante, ao fundo */}
                 <div
-                  className="chapter-number pointer-events-none absolute top-4 right-(--gutter) select-none lg:top-[calc(var(--bar)+1.5rem)]"
+                  className="chapter-number pointer-events-none absolute top-4 right-(--gutter) select-none lg:top-[calc(var(--bar)+3.5rem)]"
                   aria-hidden="true"
                 >
                   <span className="chapter-number-in display block text-[38vw] leading-[0.8] text-bone/8 lg:text-[46vh]">
@@ -176,7 +176,7 @@ export function Chapters() {
                   </p>
                   <h3
                     id={`${chapter.id}-titulo`}
-                    className="display -my-[0.04em] overflow-hidden py-[0.18em] text-[clamp(3.25rem,15.5vw,8rem)] lg:text-[min(8.2vw,17svh)]"
+                    className="display -my-[0.04em] overflow-hidden py-[0.18em] text-[min(calc((100vw-2*var(--gutter))/5.5),8rem)] whitespace-nowrap lg:text-[min(calc((50vw-2*var(--gutter))/5.5),16svh)]"
                   >
                     <span className="chapter-title block">{chapter.title}</span>
                   </h3>
@@ -206,7 +206,7 @@ export function Chapters() {
           );
         })}
         <div
-          className="chapter-flash pointer-events-none absolute inset-0 z-10 hidden bg-bone opacity-0 lg:motion-safe:block"
+          className="chapter-flash pointer-events-none absolute inset-0 z-10 hidden bg-bone opacity-0 stage:block"
           aria-hidden="true"
         />
       </div>

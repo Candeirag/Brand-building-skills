@@ -198,7 +198,7 @@ export function Process() {
         return () => observer.disconnect();
       });
 
-      media.add(MQ.desktopMotion, () => {
+      media.add(MQ.stage, () => {
         const track = root.current?.querySelector<HTMLElement>(".process-track");
         if (!track) return;
         const distance = () => Math.max(0, track.scrollWidth - window.innerWidth);
@@ -232,34 +232,34 @@ export function Process() {
       aria-labelledby="processo-titulo"
       className="relative bg-graphite"
     >
-      <div className="process-stage relative flex flex-col py-24 lg:py-32 lg:motion-safe:h-svh lg:motion-safe:min-h-[40rem] lg:motion-safe:overflow-hidden lg:motion-safe:pt-[calc(var(--bar)+2.5rem)] lg:motion-safe:pb-[calc(var(--bar)+2rem)]">
+      <div className="process-stage relative flex flex-col py-24 lg:py-32 stage:h-svh stage:overflow-hidden stage:pt-[calc(var(--bar)+2.5rem)] stage:pb-[calc(var(--bar)+2rem)]">
         <header className="px-gutter">
           <SceneHeading scene={workflow.scene} slug={workflow.slug} className="process-head" />
           <h2
             id="processo-titulo"
-            className="process-head display mt-4 max-w-[16ch] text-5xl text-balance md:text-7xl lg:motion-safe:text-[min(4.5rem,9svh)]"
+            className="process-head display mt-4 max-w-[16ch] text-5xl text-balance md:text-7xl stage:text-[min(4.5rem,9svh)]"
           >
             {workflow.title}
           </h2>
           <p className="process-head mt-3 text-base text-bone/90 md:text-lg">{workflow.lead}</p>
         </header>
 
-        <div className="relative mt-14 lg:motion-safe:mt-auto">
-          <div className="absolute inset-x-0 top-0 hidden h-px bg-steel lg:motion-safe:block" aria-hidden="true">
+        <div className="relative mt-14 stage:mt-auto">
+          <div className="absolute inset-x-0 top-0 hidden h-px bg-steel stage:block" aria-hidden="true">
             <div className="process-progress h-px origin-left bg-red" />
           </div>
-          <ol className="process-track px-gutter flex flex-col lg:motion-safe:w-max lg:motion-safe:flex-row lg:motion-safe:pr-[16vw]">
+          <ol className="process-track px-gutter flex flex-col stage:w-max stage:flex-row stage:pr-[16vw]">
             {workflow.steps.map((step, index) => (
               <li
                 key={step.id}
                 data-step={step.id}
-                className="process-step relative grid grid-cols-[5.5rem_1fr] gap-x-5 border-l border-steel pb-12 pl-5 last:pb-0 sm:grid-cols-[8rem_1fr] sm:gap-x-8 sm:pl-8 lg:motion-safe:block lg:motion-safe:w-[36vw] lg:motion-safe:pt-9 lg:motion-safe:pr-10 lg:motion-safe:pb-0"
+                className="process-step relative grid grid-cols-[5.5rem_1fr] gap-x-5 border-l border-steel pb-12 pl-5 last:pb-0 sm:grid-cols-[8rem_1fr] sm:gap-x-8 sm:pl-8 stage:block stage:w-[36vw] stage:pt-9 stage:pr-10 stage:pb-0"
               >
                 <span className="absolute top-0 -left-[3px] size-[5px] bg-red" aria-hidden="true" />
-                <div className="step-frame aspect-4/3 w-full self-start border border-steel bg-ink/50 p-2 lg:motion-safe:w-[min(15rem,26svh)]">
+                <div className="step-frame aspect-4/3 w-full self-start border border-steel bg-ink/50 p-2 stage:w-[min(15rem,22svh)]">
                   <StepArt id={step.id} />
                 </div>
-                <div className="lg:motion-safe:mt-6">
+                <div className="stage:mt-6">
                   <p className="step-reveal label text-ash">
                     Passo {String(index + 1).padStart(2, "0")} / {String(workflow.steps.length).padStart(2, "0")}
                   </p>

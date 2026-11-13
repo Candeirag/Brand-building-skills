@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { transformation } from "@/content/site";
 import { gsap, MQ, useGSAP } from "@/lib/gsap";
-import { useNear, useReducedMotion } from "@/lib/hooks";
+import { useMediaQuery, useNear } from "@/lib/hooks";
 import { useCinema } from "@/components/cinema/SmoothScroll";
 import { SceneHeading } from "@/components/ui/SceneHeading";
 import { ArrowIcon } from "@/components/ui/icons";
@@ -24,13 +24,14 @@ const TOTAL = wipeStart(stages.length - 1) - HOLD + OUTRO;
  * CENA 03 — o carro amassado vira o carro restaurado conforme a rolagem.
  * Cada etapa entra por uma máscara que desliza (overflow hidden) enquanto a imagem
  * interna desliza no sentido contrário: só transform, sem clip-path.
- * Sem movimento (prefers-reduced-motion), as etapas viram botões.
+ * Sem movimento (prefers-reduced-motion) ou em tela muito baixa, as etapas viram botões.
  */
 export function BeforeAfter() {
   const root = useRef<HTMLElement>(null);
   const seek = useRef<((stage: number) => void) | null>(null);
   const [stage, setStage] = useState(0);
-  const reduced = useReducedMotion();
+  // Sem movimento (ou em tela baixa demais para fixar), as etapas viram botões.
+  const manual = !useMediaQuery(MQ.pinned);
   const near = useNear(root);
   const { scrollTo } = useCinema();
 
@@ -38,7 +39,7 @@ export function BeforeAfter() {
     () => {
       const media = gsap.matchMedia(root);
 
-      media.add(MQ.motion, () => {
+      media.add(MQ.pinned, () => {
         const masks = gsap.utils.toArray<HTMLElement>(".ba-mask").slice(1);
 
         const timeline = gsap.timeline({
@@ -98,14 +99,14 @@ export function BeforeAfter() {
       aria-labelledby="transformacao-titulo"
       className="relative bg-ink"
     >
-      <div className="ba-stage relative flex h-svh min-h-[38rem] flex-col overflow-hidden">
+      <div className="ba-stage relative flex h-svh min-h-[35rem] flex-col overflow-hidden">
         {/* quadro: as quatro etapas empilhadas */}
         <div className="absolute inset-0">
           {stages.map((item, index) => (
             <div
               key={item.label}
               className="ba-mask absolute inset-0 overflow-hidden"
-              style={reduced ? { opacity: index <= stage ? 1 : 0 } : undefined}
+              style={manual ? { opacity: index <= stage ? 1 : 0 } : undefined}
             >
               <div className="ba-inner absolute inset-0">
                 <Image
@@ -131,7 +132,7 @@ export function BeforeAfter() {
           aria-hidden="true"
         />
 
-        <div className="px-gutter relative flex flex-1 flex-col pt-[calc(var(--bar)+1.25rem)] pb-[calc(var(--bar)+1rem)] md:pt-[calc(var(--bar)+2rem)] md:pb-[calc(var(--bar)+1.5rem)]">
+        <div className="px-gutter relative flex flex-1 flex-col pt-[calc(var(--bar)+1.25rem)] pb-[calc(var(--bar)+4.75rem)] md:pt-[calc(var(--bar)+2rem)] lg:pb-[calc(var(--bar)+1.5rem)]">
           <div className="flex items-start justify-between gap-6">
             <div>
               <SceneHeading scene={transformation.scene} slug={transformation.slug} />
@@ -144,8 +145,8 @@ export function BeforeAfter() {
                 <ArrowIcon className="size-[0.62em] text-red" />
                 <span aria-hidden="true">{after}</span>
               </h2>
-              <p className="mt-3 max-w-[30ch] text-base text-bone/90 md:text-lg">
-                {reduced ? "A mesma porta, quatro etapas. Escolha uma etapa abaixo." : transformation.lead}
+              <p className="mt-3 max-w-[40ch] text-base text-balance text-bone/90 md:text-lg">
+                {manual ? "A mesma porta, quatro etapas. Escolha uma etapa abaixo." : transformation.lead}
               </p>
             </div>
             <p className="label mt-0.5 hidden shrink-0 items-center gap-2 border border-bone/25 bg-ink/60 px-3 py-2 text-bone sm:flex" aria-hidden="true">
@@ -161,7 +162,7 @@ export function BeforeAfter() {
                 <div
                   key={item.label}
                   aria-hidden={index !== stage}
-                  className={`col-start-1 row-start-1 flex flex-col gap-x-10 gap-y-2 transition-opacity duration-500 ease-cine motion-reduce:transition-none md:flex-row md:items-end ${
+                  className={`col-start-1 row-start-1 flex flex-col gap-x-10 gap-y-2 transition-opacity duration-500 ease-cine motion-reduce:transition-none lg:flex-row lg:items-end ${
                     index === stage ? "opacity-100" : "opacity-0"
                   }`}
                 >
@@ -169,7 +170,7 @@ export function BeforeAfter() {
                     <span className="tabular text-[0.3em] text-ash">{String(index + 1).padStart(2, "0")}</span>
                     {item.label}
                   </p>
-                  <p className="max-w-[36ch] text-base text-bone/90 md:pb-[1.4vw] md:text-lg">{item.text}</p>
+                  <p className="max-w-[36ch] text-base text-bone/90 md:text-lg lg:pb-[1.4vw]">{item.text}</p>
                 </div>
               ))}
             </div>
@@ -177,18 +178,18 @@ export function BeforeAfter() {
             <div className="mt-5 h-px bg-bone/20" aria-hidden="true">
               <div
                 className="ba-progress h-px origin-left bg-red"
-                style={reduced ? { transform: `scaleX(${(stage + 1) / stages.length})` } : undefined}
+                style={manual ? { transform: `scaleX(${(stage + 1) / stages.length})` } : undefined}
               />
             </div>
 
-            <ol className="mt-1 grid grid-cols-4 gap-2">
+            <ol className="mt-1 grid grid-cols-4 gap-2 lg:pr-20">
               {stages.map((item, index) => (
                 <li key={item.label}>
                   <button
                     type="button"
                     aria-current={index === stage ? "step" : undefined}
                     onClick={() => (seek.current ? seek.current(index) : setStage(index))}
-                    className={`label flex w-full flex-col gap-1.5 py-3 text-left tracking-[0.08em] transition-opacity duration-500 md:flex-row md:gap-3 md:tracking-[0.16em] ${
+                    className={`label flex w-full flex-col gap-1.5 py-3 text-left max-sm:text-[0.625rem] max-sm:tracking-[0.03em] sm:tracking-[0.08em] transition-opacity duration-500 md:flex-row md:gap-3 md:tracking-[0.16em] ${
                       index === stage ? "text-bone opacity-100" : "text-bone opacity-55 hover:opacity-100"
                     }`}
                   >

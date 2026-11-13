@@ -88,9 +88,13 @@ export function Hero() {
       <div className="px-gutter relative flex flex-1 flex-col pt-[calc(var(--bar)+1.25rem)] pb-[calc(var(--bar)+5.5rem)] sm:pb-[calc(var(--bar)+1.5rem)] md:pt-[calc(var(--bar)+2rem)] md:pb-[calc(var(--bar)+2rem)]">
         <SceneHeading scene={hero.scene} slug={hero.slug} className="hero-fade" />
 
-        <div className="mt-auto grid gap-x-10 gap-y-6 lg:grid-cols-[1fr_minmax(0,21rem)] lg:items-end">
-          <div>
-            <h1 aria-label={title} className="display text-[length:var(--hero-size)] text-bone [--hero-size:min(14.6vw,21svh)] lg:[--hero-size:min(11.6vw,27svh)]">
+        {/*
+          --hero-size: a linha mais longa ("AO ESPELHADO.") mede 5,6em em Anton;
+          dividir a largura útil por 5,75 garante que ela nunca quebre.
+        */}
+        <div className="mt-auto grid gap-x-10 gap-y-6 [--hero-size:min(calc((100vw-2*var(--gutter))/5.75),19svh)] xl:grid-cols-[1fr_21rem] xl:items-end xl:[--hero-size:min(calc((100vw-2*var(--gutter)-23.5rem)/5.75),27svh)]">
+          <div className="display text-[length:var(--hero-size)] whitespace-nowrap text-bone">
+            <h1 aria-label={title} className="[font:inherit]">
               {hero.titleLines.map((line) => (
                 <span key={line} aria-hidden="true" className="hero-line block overflow-hidden">
                   {line}
@@ -100,13 +104,13 @@ export function Hero() {
             {/* "Espelhado": o reflexo da última linha, como em verniz molhado. */}
             <span
               aria-hidden="true"
-              className="hero-mirror display -mt-[0.1em] block h-[0.4em] overflow-hidden text-[length:var(--hero-size)] text-bone opacity-20 select-none [--hero-size:min(14.6vw,21svh)] [mask-image:linear-gradient(to_bottom,black,transparent_92%)] lg:[--hero-size:min(11.6vw,27svh)]"
+              className="hero-mirror -mt-[0.1em] block h-[0.4em] overflow-hidden opacity-20 select-none [mask-image:linear-gradient(to_bottom,black,transparent_92%)]"
             >
               <span className="block -scale-y-100">{lastLine}</span>
             </span>
           </div>
 
-          <div className="flex flex-col items-start gap-6 lg:pb-24">
+          <div className="flex flex-col items-start gap-6 xl:pb-24">
             <p className="hero-fade max-w-[34ch] text-base text-bone/90 md:text-lg">{hero.subtitle}</p>
             <div className="hero-fade">
               <WhatsAppButton>{hero.cta}</WhatsAppButton>
