@@ -1,26 +1,249 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ==========================================================================
+   Design tokens — "garagem à noite, luz de cabine de pintura"
+   Uma única cor de destaque: o vermelho do logo. Nada além dela.
+   ========================================================================== */
+
+@theme {
+  /* Zera a paleta padrão do Tailwind: só existem as cores abaixo. */
+  --color-*: initial;
+  --color-black: #000000; /* barras de letterbox */
+  --color-ink: #0b0b0c; /* fundo */
+  --color-graphite: #151517; /* fundo alternativo */
+  --color-steel: #2a2a2e; /* linhas e bordas */
+  --color-ash: #a6a199; /* texto secundário (AA sobre ink e graphite) */
+  --color-bone: #ede9e3; /* texto */
+  --color-red: #bf1a2c; /* destaque: vermelho do logo */
+
+  --ease-cine: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-cut: cubic-bezier(0.87, 0, 0.13, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-anton), "Arial Narrow", Impact, sans-serif;
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
+:root {
+  /* altura das barras de letterbox (cabeçalho em cima, timecode embaixo) */
+  --bar: 2.75rem;
+  /* margem lateral da página */
+  --gutter: 1.25rem;
+  color-scheme: dark;
+}
+
+@media (min-width: 768px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bar: 3.25rem;
+    --gutter: 2.5rem;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (min-width: 1280px) {
+  :root {
+    --gutter: 4rem;
+  }
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+@layer base {
+  html {
+    background: var(--color-ink);
+    color: var(--color-bone);
+    scroll-padding-top: var(--bar);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    overflow-x: clip;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: var(--color-red);
+    color: var(--color-bone);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-bone);
+    outline-offset: 3px;
+  }
+
+  [id] {
+    scroll-margin-top: var(--bar);
+  }
+}
+
+/* ==========================================================================
+   Tipografia
+   ========================================================================== */
+
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: 0.98;
+  letter-spacing: 0.004em;
+}
+
+/* legendas de cena, timecode, etiquetas */
+@utility label {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility px-gutter {
+  padding-inline: var(--gutter);
+}
+
+/* ==========================================================================
+   Camada de cinema
+   ========================================================================== */
+
+/* Grão de filme: um ladrilho que salta de posição (só transform). */
+.film-grain {
+  position: fixed;
+  inset: -110px;
+  z-index: 60;
+  pointer-events: none;
+  background-image: url("/grain.png");
+  background-size: 220px 220px;
+  opacity: 0.085;
+  animation: grain 0.9s steps(1) infinite;
+}
+
+@keyframes grain {
+  0% { transform: translate3d(0, 0, 0); }
+  12% { transform: translate3d(-64px, 38px, 0); }
+  25% { transform: translate3d(42px, -86px, 0); }
+  37% { transform: translate3d(-92px, -24px, 0); }
+  50% { transform: translate3d(76px, 64px, 0); }
+  62% { transform: translate3d(-18px, 96px, 0); }
+  75% { transform: translate3d(98px, -52px, 0); }
+  87% { transform: translate3d(-48px, -98px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 59;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 58%, rgb(0 0 0 / 0.42) 100%);
+}
+
+/* Flare: uma faixa de luz que cruza o quadro de tempos em tempos. */
+.flare {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 34%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgb(237 233 227 / 0.05) 35%,
+    rgb(237 233 227 / 0.13) 50%,
+    rgb(237 233 227 / 0.05) 65%,
+    transparent 100%
+  );
+  opacity: 0;
+  transform: translate3d(-120%, 0, 0) skewX(-14deg);
+  animation: flare 11s var(--ease-cine) 3.5s infinite;
+}
+
+@keyframes flare {
+  0% { transform: translate3d(-120%, 0, 0) skewX(-14deg); opacity: 0; }
+  6% { opacity: 1; }
+  26% { opacity: 1; }
+  32% { transform: translate3d(420%, 0, 0) skewX(-14deg); opacity: 0; }
+  100% { transform: translate3d(420%, 0, 0) skewX(-14deg); opacity: 0; }
+}
+
+/* Preloader: estados iniciais já no primeiro paint (antes do JS). */
+.pre-edge {
+  transform: scaleX(0);
+}
+
+/* Indicador de scroll do hero */
+.scroll-cue-dot {
+  animation: scroll-cue 2.4s var(--ease-cut) infinite;
+}
+
+@keyframes scroll-cue {
+  0% { transform: translate3d(0, -100%, 0); }
+  60%, 100% { transform: translate3d(0, 260%, 0); }
+}
+
+/* Pulso discreto do botão flutuante de WhatsApp */
+.fab-pulse {
+  animation: fab-pulse 3.6s var(--ease-cine) infinite;
+}
+
+@keyframes fab-pulse {
+  0% { transform: scale(1); opacity: 0.55; }
+  45%, 100% { transform: scale(1.7); opacity: 0; }
+}
+
+/* Brilho que varre o botão principal no hover */
+.btn-sheen {
+  transform: translate3d(-130%, 0, 0) skewX(-18deg);
+  transition: transform 0.9s var(--ease-cine);
+}
+
+.group:hover .btn-sheen,
+.group:focus-visible .btn-sheen {
+  transform: translate3d(330%, 0, 0) skewX(-18deg);
+}
+
+/* Lightbox (dialog nativo) */
+dialog.lightbox {
+  max-width: none;
+  max-height: none;
+}
+
+dialog.lightbox::backdrop {
+  background: rgb(0 0 0 / 0.94);
+}
+
+/* ==========================================================================
+   Movimento reduzido: sem laços, sem preloader, conteúdo direto.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .film-grain,
+  .flare,
+  .scroll-cue-dot,
+  .fab-pulse {
+    animation: none !important;
+  }
+
+  .flare,
+  .fab-pulse,
+  .preloader {
+    display: none !important;
+  }
+
+  .btn-sheen {
+    transition: none;
+  }
 }
