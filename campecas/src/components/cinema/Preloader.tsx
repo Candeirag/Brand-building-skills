@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { EASE, gsap, MQ, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import { EASE, gsap, MQ, useGSAP } from "@/lib/gsap";
 import { Logo } from "@/components/ui/Logo";
 import { useCinema } from "./SmoothScroll";
 
@@ -27,10 +27,7 @@ export function Preloader() {
       const progress = { value: 0 };
       const timeline = gsap.timeline({
         defaults: { ease: EASE.inOut },
-        onComplete: () => {
-          setDone(true);
-          ScrollTrigger.refresh();
-        },
+        onComplete: () => setDone(true),
       });
 
       timeline

@@ -120,7 +120,7 @@ export function Hero() {
       </div>
 
       <div
-        className="hero-fade absolute top-[42%] right-(--gutter) flex -translate-y-1/2 flex-col items-center gap-3"
+        className="hero-fade absolute top-[42%] right-(--gutter) flex -translate-y-1/2 flex-col items-center gap-3 [@media(max-height:500px)]:hidden"
         aria-hidden="true"
       >
         <span className="label text-ash [writing-mode:vertical-rl]">Role</span>

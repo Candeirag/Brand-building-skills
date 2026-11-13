@@ -15,8 +15,6 @@ export function useMediaQuery(query: string) {
   );
 }
 
-export const useReducedMotion = () => useMediaQuery("(prefers-reduced-motion: reduce)");
-
 /**
  * true quando o elemento está a até ~1,5 tela de distância.
  * Usado para carregar imagens que ficam escondidas por máscara/corte

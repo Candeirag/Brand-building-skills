@@ -6,7 +6,7 @@ import { Logo } from "./Logo";
 export function Header() {
   return (
     <LetterboxBar position="top" as="header">
-      <a href="#topo" aria-label="Campeças, voltar ao início" className="flex items-center py-2">
+      <a href="#topo" aria-label="Campeças, voltar ao início" className="flex min-h-11 items-center">
         <Logo className="h-4.5 w-auto text-bone md:h-5" title="" />
       </a>
       <nav aria-label="Seções do site" className="hidden lg:block">
@@ -23,7 +23,7 @@ export function Header() {
           ))}
         </ul>
       </nav>
-      <a href="#contato" className="label py-3 text-bone lg:hidden">
+      <a href="#contato" className="label flex min-h-11 items-center text-bone lg:hidden">
         Contato
       </a>
     </LetterboxBar>

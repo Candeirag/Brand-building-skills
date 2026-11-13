@@ -11,6 +11,8 @@ import { useGSAP } from "@gsap/react";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP);
+  // No celular, a barra de endereço que some/aparece não deve recalcular os pins.
+  ScrollTrigger.config({ ignoreMobileResize: true });
 }
 
 /** Easings "de cinema": revelações longas, nada pulando. */

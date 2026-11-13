@@ -161,9 +161,11 @@ export function Chapters() {
                   className="chapter-number pointer-events-none absolute top-4 right-(--gutter) select-none lg:top-[calc(var(--bar)+3.5rem)]"
                   aria-hidden="true"
                 >
-                  <span className="chapter-number-in display block text-[38vw] leading-[0.8] text-bone/8 lg:text-[46vh]">
-                    {number}
-                  </span>
+                  {/* via ::before: é decoração, não texto (fica fora da leitura e da checagem de contraste) */}
+                  <span
+                    data-number={number}
+                    className="chapter-number-in display block text-[38vw] leading-[0.8] text-bone/8 before:content-[attr(data-number)] lg:text-[46vh]"
+                  />
                 </div>
 
                 <div className="relative">
@@ -176,7 +178,7 @@ export function Chapters() {
                   </p>
                   <h3
                     id={`${chapter.id}-titulo`}
-                    className="display -my-[0.04em] overflow-hidden py-[0.18em] text-[min(calc((100vw-2*var(--gutter))/5.5),8rem)] whitespace-nowrap lg:text-[min(calc((50vw-2*var(--gutter))/5.5),16svh)]"
+                    className="display mt-2 -mb-[0.04em] overflow-hidden py-[0.18em] text-[min(calc((100vw-2*var(--gutter))/5.5),8rem)] whitespace-nowrap lg:text-[min(calc((50vw-2*var(--gutter))/5.5),16svh)]"
                   >
                     <span className="chapter-title block">{chapter.title}</span>
                   </h3>
@@ -194,7 +196,7 @@ export function Chapters() {
                   </ul>
                   <a
                     {...link}
-                    className="chapter-reveal group label mt-8 inline-flex items-center gap-3 border-b border-red py-3 text-bone"
+                    className="chapter-reveal group label mt-7 inline-flex min-h-11 items-center gap-3 border-b border-red py-3 text-bone"
                   >
                     Orçamento de {chapter.title.toLowerCase()}
                     <ArrowIcon className="size-4 transition-transform duration-500 ease-cine group-hover:translate-x-1.5" />

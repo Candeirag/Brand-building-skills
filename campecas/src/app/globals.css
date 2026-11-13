@@ -77,10 +77,6 @@
     outline: 2px solid var(--color-bone);
     outline-offset: 3px;
   }
-
-  [id] {
-    scroll-margin-top: var(--bar);
-  }
 }
 
 /* ==========================================================================

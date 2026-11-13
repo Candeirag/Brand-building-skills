@@ -32,6 +32,19 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
   const readyRef = useRef(false);
 
+  // As fontes mudam a altura dos textos: se ainda estiverem chegando,
+  // recalcula os gatilhos quando terminarem (o ScrollTrigger já faz isso no load).
+  useEffect(() => {
+    if (document.fonts.status === "loaded") return;
+    let active = true;
+    document.fonts.ready.then(() => {
+      if (active) ScrollTrigger.refresh();
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (window.matchMedia(MQ.reduced).matches) return;
 
